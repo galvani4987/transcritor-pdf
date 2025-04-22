@@ -79,7 +79,7 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 
 * [x] Escolher biblioteca e modelo de embedding: **OpenAI `text-embedding-3-small` via API**. Adicionar dependência `langchain-openai` ao `requirements.txt` e instalar.
 * [x] Escolher Vector DB: **PostgreSQL com extensão vetorial** (pré-existente no `modular-dashboard`). Adicionar dependência `psycopg2-binary` ao `requirements.txt` e instalar.
-* [ ] Criar módulo `src/vectorizer/` com `__init__.py`.
+* [x] Criar módulo `src/vectorizer/` com `__init__.py`.
 * [ ] Criar `src/vectorizer/embedding_generator.py`.
 * [ ] Implementar lógica para gerar embeddings (usando OpenAI) para os chunks de texto da saída formatada (Fase 4).
 * [ ] Criar `src/vectorizer/vector_store_handler.py`.
