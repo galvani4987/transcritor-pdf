@@ -92,7 +92,7 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 
 * [ ] Revisar a integração de todos os módulos no pipeline principal (loop por página + vetorização).
 * [x] Adicionar logging adequado.
-* [ ] Criar a estrutura da pasta `tests/`.
+* [x] Criar a estrutura da pasta `tests/`.
 * [ ] Escrever testes unitários e de integração (incluindo vetorização).
 * [ ] Refatorar código (clareza, eficiência, manutenibilidade).
 * [ ] Adicionar/Melhorar docstrings.
