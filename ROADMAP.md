@@ -15,21 +15,21 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 * [x] Instalação das Dependências Iniciais (`pip install -r requirements.txt`)
 * [x] Configuração do `.env` com a chave da API OpenRouter (feito pelo usuário)
 * [x] Criação deste arquivo `ROADMAP.md`
-* [ ] Realizar o commit das atualizações no `ROADMAP.md` e arquivos de configuração.
+* [x] Realizar o commit das atualizações no `ROADMAP.md` e arquivos de configuração.
 
 **Fase 1: Tratamento da Entrada (Módulo `src/input_handler`)**
 
-* [ ] Adicionar dependência para manipulação de PDF (ex: `pypdfium2`) ao `requirements.txt` e instalar.
-* [ ] Implementar análise básica de argumentos de linha de comando (CLI) em `src/main.py` usando `argparse` para receber o caminho do arquivo PDF de entrada.
-* [ ] Criar `src/input_handler/pdf_splitter.py`.
-* [ ] **Implementar função em `pdf_splitter.py` para dividir um arquivo PDF de entrada em páginas individuais (provavelmente salvando como imagens temporárias ou processando em memória).**
+* [x] Adicionar dependência para manipulação de PDF (ex: `pypdfium2`) ao `requirements.txt` e instalar.
+* [x] Implementar análise básica de argumentos de linha de comando (CLI) em `src/main.py` usando `argparse` para receber o caminho do arquivo PDF de entrada.
+* [x] Criar `src/input_handler/pdf_splitter.py`.
+* [x] **Implementar função em `pdf_splitter.py` para dividir um arquivo PDF de entrada em páginas individuais (salvando como imagens temporárias WebP em disco).**
 * [ ] Criar `src/input_handler/loader.py`.
-* [ ] Implementar função em `loader.py` para carregar uma imagem de página (seja de um arquivo de imagem direto ou de uma página de PDF extraída). Validar o input.
+* [ ] Implementar função em `loader.py` para carregar uma imagem de página (a partir do caminho do arquivo temporário). Validar o input.
 * [ ] Implementar tratamento de erros para caminhos inválidos, PDFs corrompidos ou tipos de arquivo não suportados.
 * [ ] Modificar o fluxo principal em `src/main.py` para:
     * Receber o caminho do PDF.
-    * Chamar o `pdf_splitter` para obter as páginas.
-    * **Iterar sobre cada página**, chamando as fases seguintes para cada uma.
+    * Chamar o `pdf_splitter` para obter os caminhos das páginas.
+    * **Iterar sobre cada caminho de página**, chamando as fases seguintes para cada uma.
 * [ ] Realizar commit das funcionalidades de tratamento de entrada e divisão de PDF.
 
 **Fase 2: Pré-processamento por Página (Módulo `src/preprocessor`)**
