@@ -67,9 +67,9 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 
 **Fase 4: Tratamento da Saída para RAG (Módulo `src/output_handler`)**
 
-* [ ] Criar `src/output_handler/formatter.py`.
-* [ ] **Definir formato de saída estruturado (ex: lista de JSONs, um por página/chunk) otimizado para RAG.** Cada registro deve conter o texto extraído (ou chunks dele) e metadados essenciais (arquivo original, nº da página, data extraída, nome do cliente extraído, etc.).
-* [ ] Implementar função em `formatter.py` para gerar essa saída estruturada a partir dos dados extraídos de cada página.
+* [x] Criar `src/output_handler/formatter.py`.
+* [ ] **Definir formato de saída estruturado (ex: lista de JSONs, um por página/chunk) otimizado para RAG.** (Função inicial criada, definição pode ser refinada).
+* [ ] Implementar função em `formatter.py` para gerar essa saída estruturada a partir dos dados extraídos de cada página. (Função inicial criada, chunking básico implementado).
 * [ ] Implementar a exibição (talvez resumida) do resultado no console.
 * [ ] Implementar a opção de salvar a saída estruturada completa em um arquivo (ex: `.jsonl`).
 * [ ] Integrar o tratamento de saída no final do processamento do PDF em `src/main.py`.
