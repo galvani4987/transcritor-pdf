@@ -31,3 +31,5 @@ langchain-openai # For OpenAI models (Chat, Embeddings) via Langchain
 # --- Vector Store / Database ---
 psycopg2-binary # PostgreSQL adapter for Python (for pgvector interaction)
 # langchain-postgres # Langchain integration for pgvector (Consider adding later)
+# --- Testing ---
+pytest # Framework for running tests
