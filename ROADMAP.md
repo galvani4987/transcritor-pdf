@@ -34,15 +34,21 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 
 **Fase 2: Pré-processamento por Página (Módulo `src/preprocessor`)**
 
-* [x] Adicionar dependências de pré-processamento ao `requirements.txt` (ex: `docling-core`, `pillow`) e instalar.
+* [x] Adicionar dependências de pré-processamento ao `requirements.txt` (ex: `pillow`) e instalar.
 * [x] Criar `src/preprocessor/image_processor.py`.
-* [ ] Pesquisar e decidir sobre técnicas de pré-processamento de imagem para manuscritos (ex: binarização, remoção de ruído, ajuste de contraste) **aplicáveis a cada imagem de página**.
-* [ ] Implementar as técnicas escolhidas em `image_processor.py`.
-* [ ] Pesquisar como usar `Docling` (ou similar) para análise de layout **em cada imagem de página** (detectar blocos de texto, áreas de assinatura).
-* [ ] Criar `src/preprocessor/layout_analyzer.py` (ou integrar).
-* [ ] Implementar a integração com `Docling` para obter informações de layout **por página**.
-* [ ] Integrar as etapas de pré-processamento no loop de página em `src/main.py`.
-* [ ] Realizar commit das funcionalidades de pré-processamento por página.
+* [x] Pesquisar e decidir sobre técnicas de pré-processamento de imagem para manuscritos. **(Concluído: Pesquisa indicou pipeline com Scikit-image: Deskew -> Grayscale -> Median -> CLAHE -> Sauvola)**
+* [ ] Adicionar dependência `scikit-image` ao `requirements.txt` e instalar.
+* [ ] Implementar **Deskewing** (Correção de Inclinação) em `image_processor.py` (pode requerer pesquisa adicional de implementação com Scikit-image/OpenCV).
+* [ ] Implementar **Conversão para Escala de Cinza** em `image_processor.py` (já iniciado, revisar).
+* [ ] Implementar **Filtro de Mediana** (Redução de Ruído) em `image_processor.py` usando Scikit-image.
+* [ ] Implementar **CLAHE** (Melhora de Contraste) em `image_processor.py` usando Scikit-image.
+* [ ] Implementar **Binarização Sauvola** em `image_processor.py` usando Scikit-image.
+* [ ] Implementar [Opcional] **Recorte de Bordas** em `image_processor.py`.
+* [ ] Integrar a chamada à função `preprocess_image` no loop de página em `src/main.py`.
+* [ ] Realizar commit das funcionalidades de pré-processamento.
+* [ ] _(Pendente)_ Pesquisar como usar `Docling` (ou similar) para análise de layout **em cada imagem de página** (detectar blocos de texto, áreas de assinatura).
+* [ ] _(Pendente)_ Criar `src/preprocessor/layout_analyzer.py` (ou integrar).
+* [ ] _(Pendente)_ Implementar a integração com `Docling` para obter informações de layout **por página**.
 
 **Fase 3: Extração de Informações por Página (Módulo `src/extractor`)**
 
