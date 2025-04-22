@@ -3,7 +3,7 @@
 Main entry point for the Transcritor PDF CLI application.
 
 Orchestrates the workflow: split PDF -> load page -> preprocess page ->
-extract info -> format output -> vectorize & store.
+extract text -> [TODO: parse info] -> format output -> vectorize & store.
 """
 import argparse
 import sys
@@ -12,9 +12,10 @@ import os
 # Import functions from our modules
 from .input_handler.pdf_splitter import split_pdf_to_pages, TEMP_PAGE_DIR
 from .input_handler.loader import load_page_image
-# Import the preprocessing function
 from .preprocessor.image_processor import preprocess_image
-# from .extractor import llm_client, text_extractor, info_parser # Placeholder
+# Import the text extraction function
+from .extractor.text_extractor import extract_text_from_image
+# from .extractor import llm_client, info_parser # info_parser placeholder
 # from .output_handler import formatter # Placeholder
 # from .vectorizer import embedding_generator, vector_store_handler # Placeholder
 
@@ -53,7 +54,7 @@ def run_transcription_pipeline(pdf_file_path: str):
     """
     print(f"Starting transcription pipeline for: {pdf_file_path}")
     temp_page_paths = []
-    all_extracted_data = []
+    all_extracted_data = [] # Stores dicts with info for each page
 
     try:
         print("\n--- Step 1: Splitting PDF into Pages ---")
@@ -65,65 +66,86 @@ def run_transcription_pipeline(pdf_file_path: str):
             temp_page_paths.append(page_path)
             print(f"\n--- Processing Page {page_number} (File: {page_path}) ---")
             page_image = None
-            processed_page_image = None # Variable for the preprocessed image
+            processed_page_image = None
+            extracted_text = None # Initialize extracted text for this page
 
             try:
                 print(f"--- Step 2: Loading Page Image ---")
                 page_image = load_page_image(page_path)
 
                 if page_image:
-                    # --- Step 3: Preprocess Page Image ---
                     print(f"--- Step 3: Preprocessing Page Image ---")
-                    # Call the preprocessing function from image_processor module
                     processed_page_image = preprocess_image(page_image)
 
-                    # --- Step 4: Extract Information from Page (Placeholder) ---
-                    print(f"--- Step 4: Extracting Information ---")
-                    # Pass the *processed* image to the extractor (when implemented)
-                    # extracted_info = text_extractor.extract_text_from_image(processed_page_image) # Example call
-                    # parsed_info = info_parser.parse_text(extracted_info_text) # Example call
-                    print("  -> (Placeholder) Extraction logic using processed image here.")
-                    extracted_info = {
+                    # --- Step 4: Extract Text from Page Image ---
+                    print(f"--- Step 4: Extracting Text ---")
+                    # Call the text extraction function with the *processed* image
+                    extracted_text = extract_text_from_image(processed_page_image)
+
+                    if extracted_text:
+                        print(f"  Successfully extracted text (length: {len(extracted_text)} chars).")
+                        # --- Step 4.5: Parse Information (Placeholder) ---
+                        # TODO: Call info_parser here using extracted_text
+                        print("  -> (Placeholder) Parsing specific info (name, date, etc.) from text.")
+                        parsed_info = {
+                            "client_name": f"Placeholder Name {page_number}",
+                            "document_date": f"2025-04-{page_number:02d}", # Dummy date
+                            "signature_found": (page_number % 2 == 0), # Dummy boolean
+                            "relevant_illness": f"Placeholder Illness {page_number}"
+                        }
+                    else:
+                        print("  Text extraction failed for this page.")
+                        parsed_info = {} # Empty dict if text extraction failed
+
+                    # Store results for this page
+                    page_data = {
                         "page_number": page_number,
                         "source_file": pdf_file_path,
                         "temp_image_path": page_path,
-                        # Indicate that preprocessing was applied (useful for debugging)
-                        "preprocessing_applied": True,
-                        "extracted_text": f"Placeholder text from PREPROCESSED page {page_number}.",
+                        "preprocessing_applied": True, # Or get status from preprocess_image
+                        "extracted_text": extracted_text if extracted_text else "Extraction Failed",
+                        **parsed_info # Add parsed info fields
                     }
-                    all_extracted_data.append(extracted_info)
+                    all_extracted_data.append(page_data)
 
             except FileNotFoundError as e:
                  print(f"  Error: Could not load page image, file not found: {e}. Skipping page {page_number}.", file=sys.stderr)
             except Exception as page_processing_error:
                 print(f"  Error processing page {page_number} ({page_path}): {page_processing_error}", file=sys.stderr)
-                print(f"  Skipping further processing for page {page_number}.")
+                # Store minimal info even if page processing fails mid-way
+                all_extracted_data.append({
+                    "page_number": page_number,
+                    "source_file": pdf_file_path,
+                    "temp_image_path": page_path,
+                    "error": str(page_processing_error),
+                    "extracted_text": "Processing Error",
+                })
             finally:
-                # Close the original PIL image object if it was loaded
-                if page_image:
-                    try:
-                        page_image.close()
-                    except Exception as close_error:
-                        print(f"  Warning: Error closing original image object for page {page_number}: {close_error}", file=sys.stderr)
-                # Close the processed PIL image object if it was created
-                if processed_page_image:
-                     try:
-                        processed_page_image.close()
-                     except Exception as close_error:
-                        print(f"  Warning: Error closing processed image object for page {page_number}: {close_error}", file=sys.stderr)
+                # Close image objects
+                if page_image: page_image.close()
+                if processed_page_image: processed_page_image.close()
 
 
         if not all_extracted_data:
-             print("\nWarning: No data was successfully extracted from any page.", file=sys.stderr)
+             print("\nWarning: No data was successfully processed from any page.", file=sys.stderr)
 
+        # --- Step 5: Format Overall Output (Placeholder) ---
         print("\n--- Step 5: Formatting Output ---")
         # formatted_output = formatter.format_output(all_extracted_data, pdf_file_path) # TODO
         print("  -> (Placeholder) Formatting logic here.")
         formatted_output = all_extracted_data
-        print("  Formatted Output (Placeholder - List of page data):")
-        for page_data in formatted_output:
-             print(f"    Page {page_data.get('page_number', '?')}: {page_data.get('extracted_text', 'N/A')[:80]}...")
+        print("  Formatted Output (Placeholder - First page data snippet):")
+        if formatted_output:
+            first_page_data = formatted_output[0]
+            print(f"    Page {first_page_data.get('page_number', '?')}:")
+            print(f"      Text: {first_page_data.get('extracted_text', 'N/A')[:80]}...")
+            print(f"      Name: {first_page_data.get('client_name', 'N/A')}")
+            print(f"      Date: {first_page_data.get('document_date', 'N/A')}")
+        else:
+            print("    No data to display.")
 
+
+        # --- Step 6: Vectorize and Store (Placeholder) ---
         print("\n--- Step 6: Vectorizing and Storing ---")
         # vectorize_and_store(formatted_output) # TODO
         print("  -> (Placeholder) Vectorization logic here.")
@@ -138,6 +160,7 @@ def run_transcription_pipeline(pdf_file_path: str):
         cleanup_temp_files(temp_page_paths)
         sys.exit(1)
     else:
+         # Cleanup only if pipeline finished without top-level exceptions
          cleanup_temp_files(temp_page_paths)
 
 
