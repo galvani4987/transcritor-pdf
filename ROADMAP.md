@@ -46,9 +46,9 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 
 **Fase 3: Extração de Informações por Página (Módulo `src/extractor`)**
 
-* [ ] Criar `src/extractor/llm_client.py`.
-* [ ] Implementar a lógica para carregar a API Key do OpenRouter do `.env`.
-* [ ] Implementar a configuração e inicialização do cliente Langchain (OpenRouter).
+* [x] Criar `src/extractor/llm_client.py`.
+* [x] Implementar a lógica para carregar a API Key do OpenRouter do `.env`.
+* [x] Implementar a configuração e inicialização do cliente Langchain (OpenRouter).
 * [ ] Criar `src/extractor/text_extractor.py`.
 * [ ] Desenvolver prompt/cadeia Langchain para extrair texto (OCR) **da imagem da página pré-processada**.
 * [ ] Criar `src/extractor/info_parser.py`.
