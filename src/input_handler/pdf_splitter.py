@@ -15,6 +15,9 @@ from typing import Generator
 # Get a logger instance for this module
 logger = logging.getLogger(__name__)
 
+# Define a constant for the scale factor
+DEFAULT_SCALE = 2
+
 # Define potential output directory for temporary page images
 TEMP_PAGE_DIR = "temp_pdf_pages" # Store temporary page images here
 
