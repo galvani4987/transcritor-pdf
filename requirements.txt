@@ -1,0 +1,10 @@
+# Dependências Python para transcritor-pdf
+
+# Core:
+# langchain
+# google-generativeai 
+# docling-project # Verificar nome exato no PyPI quando formos instalar
+
+# Outras possíveis dependências (ex: para lidar com imagens/PDFs):
+# pillow # Para manipulação de imagens
+# pypdf2 # Ou outra para manipulação de PDFs se necessário

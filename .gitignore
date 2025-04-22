@@ -1,0 +1,55 @@
+# Python cache files and byte-compiled code
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment folders
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+wheels/
+*.egg
+MANIFEST
+
+# Databases
+*.sqlite3
+*.db
+
+# Log files
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE / Editor directories
+.idea/
+.vscode/
+*.iml
+.project
+.settings/
+
+# Test results and coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.pytest_cache/
+
+# Secrets - Add any files containing sensitive information
+# config.ini
+# secrets.yaml
