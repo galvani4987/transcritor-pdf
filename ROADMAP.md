@@ -85,7 +85,7 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 * [x] Criar `src/vectorizer/vector_store_handler.py`.
 * [x] Implementar lógica para inicializar/conectar ao PostgreSQL.
 * [x] Implementar lógica para adicionar/atualizar os vetores e metadados na tabela PostgreSQL apropriada.
-* [ ] Integrar a etapa de vetorização no fluxo principal (`main.py`), após a Fase 4.
+* [x] Integrar a etapa de vetorização no fluxo principal (`main.py`), após a Fase 4.
 * [ ] Realizar commit da funcionalidade de vetorização.
 
 **Fase 6: Integração Final, Testes e Refinamento**
