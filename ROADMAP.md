@@ -84,7 +84,7 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 * [x] Implementar lógica para gerar embeddings (usando OpenAI) para os chunks de texto da saída formatada (Fase 4).
 * [x] Criar `src/vectorizer/vector_store_handler.py`.
 * [x] Implementar lógica para inicializar/conectar ao PostgreSQL.
-* [ ] Implementar lógica para adicionar/atualizar os vetores e metadados na tabela PostgreSQL apropriada.
+* [x] Implementar lógica para adicionar/atualizar os vetores e metadados na tabela PostgreSQL apropriada.
 * [ ] Integrar a etapa de vetorização no fluxo principal (`main.py`), após a Fase 4.
 * [ ] Realizar commit da funcionalidade de vetorização.
 
