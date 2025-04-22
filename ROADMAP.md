@@ -77,15 +77,15 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 
 **Fase 5: Vetorização e Armazenamento (Módulo `src/vectorizer`)**
 
-* [ ] Escolher biblioteca e modelo de embedding (ex: `sentence-transformers`, `openai embeddings`, ou via OpenRouter se disponível). Adicionar dependência ao `requirements.txt` e instalar.
-* [ ] Escolher Vector DB (ex: ChromaDB, FAISS - locais; Pinecone, Weaviate - cloud). Adicionar dependência se local (`chromadb`, `faiss-cpu`/`faiss-gpu`) e instalar.
+* [x] Escolher biblioteca e modelo de embedding: **OpenAI `text-embedding-3-small` via API**. Adicionar dependência `langchain-openai` ao `requirements.txt` e instalar.
+* [x] Escolher Vector DB: **PostgreSQL com extensão vetorial** (pré-existente no `modular-dashboard`). Adicionar dependência `psycopg2-binary` ao `requirements.txt` e instalar.
 * [ ] Criar módulo `src/vectorizer/` com `__init__.py`.
 * [ ] Criar `src/vectorizer/embedding_generator.py`.
-* [ ] Implementar lógica para gerar embeddings para os chunks de texto da saída formatada (Fase 4).
+* [ ] Implementar lógica para gerar embeddings (usando OpenAI) para os chunks de texto da saída formatada (Fase 4).
 * [ ] Criar `src/vectorizer/vector_store_handler.py`.
-* [ ] Implementar lógica para inicializar/conectar ao Vector DB escolhido.
-* [ ] Implementar lógica para adicionar/atualizar os vetores e metadados no Vector DB.
-* [ ] Integrar a etapa de vetorização no fluxo principal (`main.py`), provavelmente após a Fase 4.
+* [ ] Implementar lógica para inicializar/conectar ao PostgreSQL.
+* [ ] Implementar lógica para adicionar/atualizar os vetores e metadados na tabela PostgreSQL apropriada.
+* [ ] Integrar a etapa de vetorização no fluxo principal (`main.py`), após a Fase 4.
 * [ ] Realizar commit da funcionalidade de vetorização.
 
 **Fase 6: Integração Final, Testes e Refinamento**

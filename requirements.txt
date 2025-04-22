@@ -26,3 +26,8 @@ pypdfium2 # Biblioteca moderna para manipulação de PDF (extrair páginas/image
 Pillow # For image manipulation (might be needed for preprocessing steps)
 # docling-core # (?) Check PyPI name - For document layout analysis (Add when implementing)
 scikit-image # For advanced image processing (CLAHE, Sauvola binarization, Median filter, etc.)
+# Langchain specific integrations (add as needed)
+langchain-openai # For OpenAI models (Chat, Embeddings) via Langchain
+# --- Vector Store / Database ---
+psycopg2-binary # PostgreSQL adapter for Python (for pgvector interaction)
+# langchain-postgres # Langchain integration for pgvector (Consider adding later)
