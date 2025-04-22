@@ -91,7 +91,7 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 **Fase 6: Integração Final, Testes e Refinamento**
 
 * [ ] Revisar a integração de todos os módulos no pipeline principal (loop por página + vetorização).
-* [ ] Adicionar logging adequado.
+* [x] Adicionar logging adequado.
 * [ ] Criar a estrutura da pasta `tests/`.
 * [ ] Escrever testes unitários e de integração (incluindo vetorização).
 * [ ] Refatorar código (clareza, eficiência, manutenibilidade).

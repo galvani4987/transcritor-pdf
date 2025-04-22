@@ -3,30 +3,34 @@
 Module responsible for extracting text content from a preprocessed page image.
 
 Uses a multimodal LLM via the configured Langchain client to perform OCR-like
-text extraction from the image data.
+text extraction from the image data. Includes logging.
 """
 
 import base64
 import io
 import sys
+import logging # Import logging
 from PIL import Image
 # Import the function to get the initialized LLM client
 from .llm_client import get_llm_client
 # Import necessary Langchain components for multimodal input
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import HumanMessage # Removed SystemMessage import for now
+
+# Get a logger instance for this module
+logger = logging.getLogger(__name__)
 
 def encode_image_to_base64(image: Image.Image) -> str:
     """Encodes a PIL Image object into a base64 string."""
-    # Use BytesIO to handle the image in memory without saving to disk
-    buffered = io.BytesIO()
-    # Save the image to the buffer in a suitable format (e.g., WEBP or PNG)
-    # Using WEBP lossless as it's our intermediate format, but PNG is also fine here.
-    image.save(buffered, format="WEBP", lossless=True)
-    # Get the byte string from the buffer
-    img_bytes = buffered.getvalue()
-    # Encode the byte string to base64
-    base64_str = base64.b64encode(img_bytes).decode('utf-8')
-    return base64_str
+    try:
+        buffered = io.BytesIO()
+        # Using WEBP lossless as it's our intermediate format
+        image.save(buffered, format="WEBP", lossless=True)
+        img_bytes = buffered.getvalue()
+        base64_str = base64.b64encode(img_bytes).decode('utf-8')
+        return base64_str
+    except Exception as e:
+        logger.error(f"Error encoding image to base64: {e}", exc_info=True)
+        raise # Re-raise the error to be caught by the caller
 
 def extract_text_from_image(image: Image.Image) -> str | None:
     """
@@ -37,27 +41,28 @@ def extract_text_from_image(image: Image.Image) -> str | None:
 
     Returns:
         The extracted text as a string, or None if extraction fails.
-
     Raises:
+        TypeError: If input is not a PIL Image object.
         Exception: If errors occur during LLM client interaction or image processing.
     """
     if not isinstance(image, Image.Image):
+        # Log error and raise TypeError for incorrect input type
+        logger.error("Invalid input type for text extraction: Expected PIL Image.")
         raise TypeError("Input must be a PIL Image object.")
 
-    print(f"Starting text extraction for image (mode: {image.mode}, size: {image.size})...")
+    logger.info(f"Starting text extraction for image (mode: {image.mode}, size: {image.size})...")
 
     try:
         # Get the initialized LLM client
         llm = get_llm_client() # This function handles initialization and config loading
 
         # --- Prepare the image for the multimodal LLM ---
-        # Most multimodal models expect the image encoded as a base64 string.
+        logger.debug("Encoding image to base64 for LLM...")
         base64_image = encode_image_to_base64(image)
+        logger.debug("Image successfully encoded.")
 
         # --- Construct the prompt for the LLM ---
-        # This prompt needs to instruct the model to perform OCR on the image.
-        # The structure for multimodal input varies slightly between models/Langchain versions.
-        # This is a common pattern using HumanMessage with a content list.
+        # Using the pattern from previous implementation
         message = HumanMessage(
             content=[
                 {
@@ -67,80 +72,70 @@ def extract_text_from_image(image: Image.Image) -> str | None:
                 {
                     "type": "image_url",
                     "image_url": {
-                        # Use the data URI scheme for base64 encoded images
-                        "url": f"data:image/webp;base64,{base64_image}"
+                        "url": f"data:image/webp;base64,{base64_image}" # Specify webp format
                     },
                 },
             ]
         )
 
         # --- Invoke the LLM ---
-        print("  Sending image to LLM for text extraction...")
-        # Add SystemMessage for better context if needed (optional)
-        # system_prompt = SystemMessage(content="You are an expert OCR engine specialized in medical documents.")
-        # response = llm.invoke([system_prompt, message])
+        logger.info("Sending image to LLM for text extraction...")
         response = llm.invoke([message])
 
         # --- Process the response ---
-        # The actual text is usually in the 'content' attribute of the response object
         if hasattr(response, 'content'):
             extracted_text = response.content
-            print("  LLM extraction successful.")
-            # print(f"  Extracted Text Snippet: {extracted_text[:100]}...") # Optional: Log snippet
+            logger.info("LLM extraction successful.")
+            # logger.debug(f"Extracted Text Snippet: {extracted_text[:100]}...") # Optional debug log
             return extracted_text
         else:
-            print(f"  Error: Unexpected LLM response format: {response}", file=sys.stderr)
+            logger.error(f"Unexpected LLM response format: {response}")
             return None
 
     except Exception as e:
-        print(f"Error during text extraction: {e}", file=sys.stderr)
-        # Decide whether to return None or re-raise the exception
-        # Returning None might allow the pipeline to continue with other pages
-        # Re-raising stops the whole process
-        # raise # Option to re-raise
-        return None # Option to return None and let main loop handle it
+        # Log errors from encoding, client getting, or LLM invocation
+        logger.error(f"Error during text extraction: {e}", exc_info=True)
+        # Returning None allows the main pipeline to potentially continue with other pages
+        return None
 
 # Example usage block (for testing when script is run directly)
 if __name__ == "__main__":
-    print("\n--- Running text_extractor.py directly for testing ---")
-    # This requires a sample image file and a configured .env file for the LLM client
+    # Configure logging for test run
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
+    logger.info("--- Running text_extractor.py directly for testing ---")
 
-    import os
-    test_image_dir = "temp_test_loader" # Use the same dir as other tests
-    test_image_path = os.path.join(test_image_dir, "processed_test_image.png") # Use the processed image if available
+    import os # Import os for file operations
+
+    test_image_dir = "temp_test_loader"
+    test_image_path = os.path.join(test_image_dir, "processed_skimage_test_image.png") # Use processed image
 
     if os.path.exists(test_image_path):
-        print(f"\nLoading test image: {test_image_path}")
+        logger.info(f"Loading test image: {test_image_path}")
         input_image = None
         try:
             input_image = Image.open(test_image_path)
             input_image.load()
-            print(f"Input image loaded: mode={input_image.mode}, size={input_image.size}")
+            logger.info(f"Input image loaded: mode={input_image.mode}, size={input_image.size}")
 
-            # Attempt text extraction
             extracted_text = extract_text_from_image(input_image)
 
             if extracted_text is not None:
-                print("\n--- Extracted Text ---")
-                print(extracted_text)
-                print("----------------------")
+                logger.info("--- Extracted Text ---")
+                print(extracted_text) # Print the result directly in the test
+                logger.info("----------------------")
             else:
-                print("\nText extraction failed or returned None.")
+                logger.warning("Text extraction failed or returned None.")
 
         except FileNotFoundError:
-             print(f"Error: Test image not found at {test_image_path}")
+             logger.error(f"Test image not found at {test_image_path}")
         except Exception as e:
-             print(f"An error occurred during testing: {e}")
+             logger.error(f"An error occurred during testing: {e}", exc_info=True)
         finally:
-            # Close image if opened
-            if input_image:
-                input_image.close()
-            # Note: We leave the dummy input and processed output files for inspection.
+            if input_image: input_image.close()
 
     else:
-        print(f"\nTest image not found at '{test_image_path}'.")
-        print(f"Please ensure the test image exists (e.g., by running the image_processor.py test first)")
-        print(f"or update the 'test_image_path' variable in this script.")
-        print("Also ensure your .env file is configured correctly for the LLM client.")
+        logger.warning(f"Test image not found at '{test_image_path}'.")
+        logger.warning("Please ensure the test image exists (e.g., by running image_processor.py test)")
+        logger.warning("Also ensure your .env file is configured correctly for the LLM client.")
 
-    print("\n--- Text Extractor Test Complete ---")
+    logger.info("--- Text Extractor Test Complete ---")

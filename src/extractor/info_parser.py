@@ -1,17 +1,21 @@
 # -*- coding: utf-8 -*-
 """
 Module for parsing structured information from raw extracted text using an LLM.
-(Complete file created via Overwrite)
+Includes logging.
 """
 
 import json
 import sys
+import logging # Import logging
 from typing import Dict, Any, Optional
 # Import LLM client getter
-from .llm_client import get_llm_client
+from .llm_client import get_llm_client # Assumes llm_client also uses logging
 # Import Langchain components
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import PromptTemplate
+
+# Get a logger instance for this module
+logger = logging.getLogger(__name__)
 
 # --- Output Parser ---
 # Use Langchain's built-in JSON parser
@@ -57,35 +61,37 @@ def parse_extracted_info(raw_text: str) -> Optional[Dict[str, Any]]:
         A dictionary with parsed info, or None on failure/invalid input.
     """
     if not raw_text or not isinstance(raw_text, str):
-        print("  Info Parser: Invalid input text.", file=sys.stderr)
+        logger.warning("Info Parser: Invalid input text provided. Skipping parsing.")
         return None
 
-    print("  Starting structured information parsing...")
+    logger.info("Starting structured information parsing...")
     try:
         llm = get_llm_client()
         # Chain: Prompt -> LLM -> JSON Parser
         chain = prompt | llm | parser
-        print("  Sending text to LLM for structured parsing...")
+        logger.info("Sending text to LLM for structured parsing...")
         # Provide the raw text as input
         parsed_result = chain.invoke({"extracted_text": raw_text})
-        print("  LLM parsing successful.")
+        logger.info("LLM parsing successful.")
 
         # Basic validation of the result
         if isinstance(parsed_result, dict):
-            # Add more robust validation if needed (e.g., check key existence)
-            print(f"  Parsed Info: {parsed_result}")
+            # Could add more validation here (e.g., check key existence)
+            logger.debug(f"Parsed Info: {parsed_result}") # Log result at debug level
             return parsed_result
         else:
-            print(f"  Error: Parser did not return a dict. Got: {type(parsed_result)}", file=sys.stderr)
+            logger.error(f"Parser did not return a dict. Got: {type(parsed_result)}. Response: {parsed_result}")
             return None
 
     except Exception as e:
-        print(f"Error during structured information parsing: {e}", file=sys.stderr)
+        logger.error(f"Error during structured information parsing: {e}", exc_info=True)
         return None
 
 # --- Testing Block ---
 if __name__ == "__main__":
-    print("\n--- Running info_parser.py directly for testing ---")
+    # Configure logging for test run
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
+    logger.info("--- Running info_parser.py directly for testing ---")
     # Requires .env file for LLM client
 
     test_raw_text = """
@@ -97,17 +103,18 @@ if __name__ == "__main__":
     _________________________
     Dr. Ricardo Mendes CRM-MA 9876
     """
-    print("\nInput Text:\n```\n" + test_raw_text + "\n```")
+    logger.info("\nInput Text:\n```\n" + test_raw_text + "\n```")
 
     try:
         parsed_data = parse_extracted_info(test_raw_text)
         if parsed_data:
-            print("\n--- Parsed Information (JSON) ---")
+            logger.info("--- Parsed Information (JSON) ---")
+            # Use print here for direct output in test, or log as well
             print(json.dumps(parsed_data, indent=2, ensure_ascii=False))
-            print("---------------------------------")
+            logger.info("---------------------------------")
         else:
-            print("\nInformation parsing failed.")
+            logger.warning("Information parsing failed.")
     except Exception as e:
-         print(f"\nTesting error: {e}")
+         logger.error(f"Testing error: {e}", exc_info=True)
 
-    print("\n--- Info Parser Test Complete ---")
+    logger.info("--- Info Parser Test Complete ---")
