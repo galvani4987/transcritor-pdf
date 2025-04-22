@@ -37,12 +37,12 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 * [x] Adicionar dependências de pré-processamento ao `requirements.txt` (ex: `pillow`) e instalar.
 * [x] Criar `src/preprocessor/image_processor.py`.
 * [x] Pesquisar e decidir sobre técnicas de pré-processamento de imagem para manuscritos. **(Concluído: Pesquisa indicou pipeline com Scikit-image: Deskew -> Grayscale -> Median -> CLAHE -> Sauvola)**
-* [ ] Adicionar dependência `scikit-image` ao `requirements.txt` e instalar.
+* [x] Adicionar dependência `scikit-image` ao `requirements.txt` e instalar.
 * [ ] Implementar **Deskewing** (Correção de Inclinação) em `image_processor.py` (pode requerer pesquisa adicional de implementação com Scikit-image/OpenCV).
-* [ ] Implementar **Conversão para Escala de Cinza** em `image_processor.py` (já iniciado, revisar).
-* [ ] Implementar **Filtro de Mediana** (Redução de Ruído) em `image_processor.py` usando Scikit-image.
-* [ ] Implementar **CLAHE** (Melhora de Contraste) em `image_processor.py` usando Scikit-image.
-* [ ] Implementar **Binarização Sauvola** em `image_processor.py` usando Scikit-image.
+* [x] Implementar **Conversão para Escala de Cinza** em `image_processor.py`.
+* [x] Implementar **Filtro de Mediana** (Redução de Ruído) em `image_processor.py` usando Scikit-image.
+* [x] Implementar **CLAHE** (Melhora de Contraste) em `image_processor.py` usando Scikit-image.
+* [x] Implementar **Binarização Sauvola** em `image_processor.py` usando Scikit-image.
 * [ ] Implementar [Opcional] **Recorte de Bordas** em `image_processor.py`.
 * [ ] Integrar a chamada à função `preprocess_image` no loop de página em `src/main.py`.
 * [ ] Realizar commit das funcionalidades de pré-processamento.
