@@ -1,6 +1,6 @@
 # Roadmap - Transcritor PDF
 
-Este documento detalha as fases e tarefas planejadas para o desenvolvimento do projeto `transcritor-pdf`. Usaremos checkboxes (`[ ]` pendente, `[x]` concluído) para acompanhar o progresso. **Nota:** Requisitos atualizados em 21/04/2025 para incluir processamento página-a-página, objetivo final de RAG, e interação com Vector DB.
+Este documento detalha as fases e tarefas planejadas para o desenvolvimento do projeto `transcritor-pdf`. Usaremos checkboxes (`[ ]` pendente, `[x]` concluído) para acompanhar o progresso. **Nota:** Requisitos atualizados em 22/04/2025 para incluir processamento página-a-página, objetivo final de RAG, e interação com Vector DB.
 
 **Fase 0: Configuração Inicial e Planejamento**
 
@@ -62,7 +62,7 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 * [ ] Refinar prompts para precisão e custo **por página** (tanto para text_extractor quanto info_parser).
 * [ ] Implementar tratamento de erros para chamadas à API LLM (mais robusto).
 * [x] Integrar as etapas de extração (text_extractor) no loop de página em `src/main.py`.
-* [ ] Integrar a chamada ao `info_parser` no loop de página em `src/main.py`.
+* [x] Integrar a chamada ao `info_parser` no loop de página em `src/main.py`.
 * [ ] Realizar commit das funcionalidades de extração por página.
 
 **Fase 4: Tratamento da Saída para RAG (Módulo `src/output_handler`)**
