@@ -44,7 +44,7 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 * [x] Implementar **CLAHE** (Melhora de Contraste) em `image_processor.py` usando Scikit-image.
 * [x] Implementar **Binarização Sauvola** em `image_processor.py` usando Scikit-image.
 * [ ] Implementar [Opcional] **Recorte de Bordas** em `image_processor.py`.
-* [ ] Integrar a chamada à função `preprocess_image` no loop de página em `src/main.py`.
+* [x] Integrar a chamada à função `preprocess_image` no loop de página em `src/main.py`.
 * [ ] Realizar commit das funcionalidades de pré-processamento.
 * [ ] _(Pendente)_ Pesquisar como usar `Docling` (ou similar) para análise de layout **em cada imagem de página** (detectar blocos de texto, áreas de assinatura).
 * [ ] _(Pendente)_ Criar `src/preprocessor/layout_analyzer.py` (ou integrar).
