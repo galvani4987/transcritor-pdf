@@ -61,7 +61,7 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 * [ ] Desenvolver prompt/cadeia Langchain para analisar o texto extraído **da página** e identificar/extrair informações chave (Nome Cliente, Data, Assinatura?, Doenças?). **Considerar como lidar com informações que podem abranger múltiplas páginas (talvez extrair por página e agregar depois?).**
 * [ ] Refinar prompts para precisão e custo **por página**.
 * [ ] Implementar tratamento de erros para chamadas à API LLM.
-* [ ] Integrar as etapas de extração no loop de página em `src/main.py`.
+* [x] Integrar as etapas de extração (text_extractor) no loop de página em `src/main.py`.
 * [ ] Realizar commit das funcionalidades de extração por página.
 
 **Fase 4: Tratamento da Saída para RAG (Módulo `src/output_handler`)**
