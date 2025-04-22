@@ -57,11 +57,12 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 * [x] Implementar a configuração e inicialização do cliente Langchain (OpenRouter).
 * [x] Criar `src/extractor/text_extractor.py`.
 * [x] Desenvolver prompt/cadeia Langchain para extrair texto (OCR) **da imagem da página pré-processada**.
-* [ ] Criar `src/extractor/info_parser.py`.
-* [ ] Desenvolver prompt/cadeia Langchain para analisar o texto extraído **da página** e identificar/extrair informações chave (Nome Cliente, Data, Assinatura?, Doenças?). **Considerar como lidar com informações que podem abranger múltiplas páginas (talvez extrair por página e agregar depois?).**
-* [ ] Refinar prompts para precisão e custo **por página**.
-* [ ] Implementar tratamento de erros para chamadas à API LLM.
+* [x] Criar `src/extractor/info_parser.py`.
+* [x] Desenvolver prompt/cadeia Langchain para analisar o texto extraído **da página** e identificar/extrair informações chave (JSON Output).
+* [ ] Refinar prompts para precisão e custo **por página** (tanto para text_extractor quanto info_parser).
+* [ ] Implementar tratamento de erros para chamadas à API LLM (mais robusto).
 * [x] Integrar as etapas de extração (text_extractor) no loop de página em `src/main.py`.
+* [ ] Integrar a chamada ao `info_parser` no loop de página em `src/main.py`.
 * [ ] Realizar commit das funcionalidades de extração por página.
 
 **Fase 4: Tratamento da Saída para RAG (Módulo `src/output_handler`)**
