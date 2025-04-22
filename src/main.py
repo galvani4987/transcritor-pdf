@@ -3,20 +3,21 @@
 Main entry point for the Transcritor PDF CLI application.
 
 Orchestrates the workflow: split PDF -> load page -> preprocess page ->
-extract text -> parse info -> format output -> vectorize & store.
+extract text -> parse info -> format output (RAG chunks) -> [TODO: vectorize & store].
 """
 import argparse
 import sys
 import os
+import json # Import json for potentially printing the output
 
 # Import functions from our modules
 from .input_handler.pdf_splitter import split_pdf_to_pages, TEMP_PAGE_DIR
 from .input_handler.loader import load_page_image
 from .preprocessor.image_processor import preprocess_image
-# Import the text extraction and info parsing functions
 from .extractor.text_extractor import extract_text_from_image
 from .extractor.info_parser import parse_extracted_info
-# from .output_handler import formatter # Placeholder
+# Import the RAG formatter function
+from .output_handler.formatter import format_output_for_rag
 # from .vectorizer import embedding_generator, vector_store_handler # Placeholder
 
 # --- Utility function for cleaning up temporary files ---
@@ -68,7 +69,7 @@ def run_transcription_pipeline(pdf_file_path: str):
             page_image = None
             processed_page_image = None
             extracted_text = None
-            parsed_info = None # Initialize parsed info for this page
+            parsed_info = None
 
             try:
                 print(f"--- Step 2: Loading Page Image ---")
@@ -81,28 +82,24 @@ def run_transcription_pipeline(pdf_file_path: str):
                     print(f"--- Step 4: Extracting Text ---")
                     extracted_text = extract_text_from_image(processed_page_image)
 
-                    # --- Step 4.5: Parse Structured Information ---
                     if extracted_text:
                         print(f"--- Step 4.5: Parsing Extracted Text ---")
-                        # Call the info parser with the extracted text
                         parsed_info = parse_extracted_info(extracted_text)
                         if parsed_info:
                              print("  Successfully parsed structured information.")
                         else:
                              print("  Structured information parsing failed or returned None.")
-                             parsed_info = {} # Ensure parsed_info is a dict even on failure
+                             parsed_info = {}
                     else:
                         print("  Skipping information parsing because text extraction failed.")
-                        parsed_info = {} # Empty dict if text extraction failed
+                        parsed_info = {}
 
-                    # Store results for this page, combining base info and parsed info
                     page_data = {
                         "page_number": page_number,
                         "source_file": pdf_file_path,
                         "temp_image_path": page_path,
                         "preprocessing_applied": True,
                         "extracted_text": extracted_text if extracted_text else "Extraction Failed",
-                        # Merge the parsed info dictionary (handles None/empty cases)
                         **(parsed_info if parsed_info else {})
                     }
                     all_extracted_data.append(page_data)
@@ -122,36 +119,36 @@ def run_transcription_pipeline(pdf_file_path: str):
                     "extracted_text": "Processing Error",
                 })
             finally:
-                # Close image objects
                 if page_image: page_image.close()
                 if processed_page_image: processed_page_image.close()
 
 
         if not all_extracted_data:
              print("\nWarning: No data was successfully processed from any page.", file=sys.stderr)
+             # Exit early if no data? Or continue to allow cleanup? Continuing for now.
 
-        # --- Step 5: Format Overall Output (Placeholder) ---
-        print("\n--- Step 5: Formatting Output ---")
-        # formatted_output = formatter.format_output(all_extracted_data, pdf_file_path) # TODO
-        print("  -> (Placeholder) Formatting logic here.")
-        formatted_output = all_extracted_data
-        print("  Formatted Output (Placeholder - First page data snippet):")
-        if formatted_output:
-            first_page_data = formatted_output[0]
-            print(f"    Page {first_page_data.get('page_number', '?')}:")
-            print(f"      Text: {first_page_data.get('extracted_text', 'N/A')[:80]}...")
-            print(f"      Name: {first_page_data.get('client_name', 'N/A')}") # Now uses parsed key
-            print(f"      Date: {first_page_data.get('document_date', 'N/A')}") # Now uses parsed key
-            print(f"      Signature: {first_page_data.get('signature_found', 'N/A')}") # Now uses parsed key
-            print(f"      Illnesses: {first_page_data.get('relevant_illness_mentions', 'N/A')}") # Now uses parsed key
+        # --- Step 5: Format Output for RAG ---
+        print("\n--- Step 5: Formatting Output for RAG ---")
+        # Call the formatter function with the collected page data
+        rag_chunks = format_output_for_rag(all_extracted_data, pdf_file_path)
+
+        # Print a summary or the first chunk for verification
+        print("  Output formatting complete.")
+        if rag_chunks:
+            print(f"  Generated {len(rag_chunks)} chunks suitable for RAG.")
+            print("  Example RAG Chunk (First Chunk):")
+            # Use json.dumps for pretty printing the dictionary
+            print(json.dumps(rag_chunks[0], indent=2, ensure_ascii=False))
+            # TODO: Add option to save rag_chunks to a file (e.g., jsonl)
         else:
-            print("    No data to display.")
+            print("  No RAG chunks were generated.")
 
 
         # --- Step 6: Vectorize and Store (Placeholder) ---
         print("\n--- Step 6: Vectorizing and Storing ---")
-        # vectorize_and_store(formatted_output) # TODO
-        print("  -> (Placeholder) Vectorization logic here.")
+        # This step will take rag_chunks as input
+        # vectorize_and_store(rag_chunks) # TODO
+        print("  -> (Placeholder) Vectorization logic using rag_chunks here.")
 
         print("\nPipeline finished successfully.")
 
@@ -174,15 +171,21 @@ def main_cli():
     """
     print("--- Transcritor PDF ---")
     parser = argparse.ArgumentParser(
-        description="Process a PDF file of handwritten medical documents, extract information, and optionally vectorize."
+        description="Process a PDF file of handwritten medical documents, extract information, format for RAG, and optionally vectorize."
     )
     parser.add_argument(
         "pdf_file_path",
         type=str,
         help="Path to the PDF file to be processed."
     )
+    # Example: Add optional argument to save output
+    # parser.add_argument(
+    #     "-o", "--output-file",
+    #     type=str,
+    #     help="Path to save the formatted RAG chunks (e.g., output.jsonl)."
+    # )
     args = parser.parse_args()
-    run_transcription_pipeline(args.pdf_file_path)
+    run_transcription_pipeline(args.pdf_file_path) # Pass output_file arg if added
 
 
 if __name__ == "__main__":
