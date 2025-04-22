@@ -81,7 +81,7 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 * [x] Escolher Vector DB: **PostgreSQL com extensão vetorial** (pré-existente no `modular-dashboard`). Adicionar dependência `psycopg2-binary` ao `requirements.txt` e instalar.
 * [x] Criar módulo `src/vectorizer/` com `__init__.py`.
 * [x] Criar `src/vectorizer/embedding_generator.py`.
-* [ ] Implementar lógica para gerar embeddings (usando OpenAI) para os chunks de texto da saída formatada (Fase 4).
+* [x] Implementar lógica para gerar embeddings (usando OpenAI) para os chunks de texto da saída formatada (Fase 4).
 * [ ] Criar `src/vectorizer/vector_store_handler.py`.
 * [ ] Implementar lógica para inicializar/conectar ao PostgreSQL.
 * [ ] Implementar lógica para adicionar/atualizar os vetores e metadados na tabela PostgreSQL apropriada.
