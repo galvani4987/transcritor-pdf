@@ -93,7 +93,7 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 * [ ] Revisar a integração de todos os módulos no pipeline principal (loop por página + vetorização).
 * [x] Adicionar logging adequado.
 * [x] Criar a estrutura da pasta `tests/`.
-* [x] Escrever testes unitários e de integração (incluindo vetorização). (Iniciado com testes para formatter).
+* [x] Escrever testes unitários e de integração (incluindo vetorização). (Iniciado com testes para formatter e image_processor).
 * [ ] Refatorar código (clareza, eficiência, manutenibilidade).
 * [ ] Adicionar/Melhorar docstrings.
 * [ ] Atualizar `README.md` com instruções de uso completas.
