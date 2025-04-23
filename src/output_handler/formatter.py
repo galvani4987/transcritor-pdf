@@ -1,93 +1,127 @@
 # -*- coding: utf-8 -*-
-"""
-Module responsible for formatting the extracted page data into a structure
-suitable for Retrieval-Augmented Generation (RAG) systems. Includes logging.
+"""Formats extracted page data into chunks suitable for RAG systems.
+
+This module takes the list of dictionaries (each representing processed data
+from a single page) and transforms it into a list of smaller "chunks".
+Each chunk contains a piece of text content and associated metadata
+(like source file, page number, and extracted entities) necessary for
+effective indexing and retrieval in a Retrieval-Augmented Generation context.
+Includes logging for operations and errors.
 """
 
 import json
-import os # Needed for basename in chunk_id
-import logging # Import logging
-from typing import List, Dict, Any, Generator # Keep Generator if switching back later
+import os
+import logging
+from typing import List, Dict, Any
 
 # Get a logger instance for this module
 logger = logging.getLogger(__name__)
 
 # --- Configuration ---
+# Defines how text is split into chunks. Using double newline (paragraph).
+# TODO: Consider more advanced chunking (e.g., recursive, semantic) via Langchain text splitters if needed.
 CHUNK_SEPARATOR = "\n\n"
-MIN_CHUNK_LENGTH = 50 # Characters
+# Minimum character length for a chunk to be considered valid. Prevents overly short/noisy chunks.
+# TODO: Make this configurable?
+MIN_CHUNK_LENGTH = 50
 
 def format_output_for_rag(all_pages_data: List[Dict[str, Any]], original_pdf_path: str) -> List[Dict[str, Any]]:
-    """
-    Formats the collected data from all pages into a list of dictionaries,
-    where each dictionary represents a text chunk suitable for RAG indexing.
+    """Formats page data into a list of RAG-suitable text chunks with metadata.
+
+    Iterates through the data extracted from each page. For pages without errors
+    and containing extracted text, it splits the text into chunks based on the
+    `CHUNK_SEPARATOR`. Chunks shorter than `MIN_CHUNK_LENGTH` are discarded.
+    Each valid chunk is then combined with relevant metadata extracted from
+    that page (e.g., source PDF filename, page number, client name, document date)
+    into a dictionary structure optimized for vector store indexing.
 
     Args:
-        all_pages_data: A list of dictionaries with extracted info per page.
-        original_pdf_path: The path to the original PDF file processed.
+        all_pages_data: A list where each item is a dictionary containing the
+                        results of processing a single page. Expected keys
+                        include 'page_number', 'extracted_text', 'error' (optional),
+                        and potentially parsed entities like 'client_name',
+                        'document_date', 'signature_found'.
+        original_pdf_path: The file path of the original PDF document being processed.
+                           Used to associate chunks with their source file.
 
     Returns:
-        A list of dictionaries, each representing a chunk.
+        A list of dictionaries. Each dictionary represents a single text chunk
+        ready for embedding and indexing. The dictionary structure includes:
+        - 'chunk_id': A unique identifier for the chunk.
+        - 'text_content': The actual text content of the chunk.
+        - 'metadata': A dictionary containing associated metadata (source_pdf,
+                      page_number, chunk_index_on_page, client_name, etc.).
+        Returns an empty list if `all_pages_data` is empty or if no valid
+        chunks meeting the length requirement are found.
     """
     logger.info("--- Formatting output for RAG ---")
     rag_chunks = []
-    chunk_id_counter = 0 # Global counter across all pages for unique chunk IDs
+    chunk_id_counter = 0 # Global counter for unique chunk IDs across the document
 
     if not all_pages_data:
         logger.warning("No page data provided to format.")
         return []
 
-    pdf_basename = os.path.basename(original_pdf_path) # Get filename for chunk ID
+    # Extract just the filename for potentially cleaner metadata
+    pdf_basename = os.path.basename(original_pdf_path)
+    logger.debug(f"Using PDF basename for metadata: {pdf_basename}")
 
     for page_data in all_pages_data:
         page_number = page_data.get("page_number", "Unknown")
         extracted_text = page_data.get("extracted_text", "")
-        page_error = page_data.get("error") # Check if an error occurred on this page
+        page_error = page_data.get("error")
 
-        # Skip pages with errors or no valid extracted text
+        # Validate page data before processing
         if page_error or not extracted_text or extracted_text in ["Extraction Failed", "Processing Error", "Loading Error"]:
             logger.warning(f"Skipping page {page_number} due to error ('{page_error}') or missing/invalid text.")
             continue
 
-        # --- Basic Text Chunking ---
-        logger.debug(f"Chunking text for page {page_number}...")
+        # --- Text Chunking ---
+        logger.debug(f"Chunking text for page {page_number} using separator '{CHUNK_SEPARATOR.encode('unicode_escape').decode()}'.")
         text_chunks = extracted_text.split(CHUNK_SEPARATOR)
-        page_chunk_index = 0 # Reset chunk index for each page
+        page_chunk_index = 0 # Index of the chunk within the current page
 
         for chunk_text in text_chunks:
-            chunk_text = chunk_text.strip()
+            chunk_text = chunk_text.strip() # Remove leading/trailing whitespace
 
+            # Filter out short or empty chunks
             if len(chunk_text) < MIN_CHUNK_LENGTH:
-                logger.debug(f"  Skipping short chunk on page {page_number}.")
+                logger.debug(f"  Skipping short chunk on page {page_number} (length: {len(chunk_text)} < {MIN_CHUNK_LENGTH}).")
                 continue
 
+            # Increment counters for valid chunks
             chunk_id_counter += 1
             page_chunk_index += 1
 
             # --- Metadata Association ---
+            # Gather metadata specific to this chunk from the page data
             metadata = {
-                "source_pdf": pdf_basename, # Store only filename, not full path? Or full path? Using basename for now.
+                "source_pdf": pdf_basename, # Or use original_pdf_path if full path needed
                 "page_number": page_number,
                 "chunk_index_on_page": page_chunk_index,
+                # Carry over parsed information if available
                 "client_name": page_data.get("client_name"),
                 "document_date": page_data.get("document_date"),
                 "signature_found": page_data.get("signature_found"),
-                # Add illnesses list if available and not empty
-                # "relevant_illness_mentions": page_data.get("relevant_illness_mentions") or [],
+                # Example: Add illness list only if it's not empty
+                # "relevant_illness_mentions": ills if (ills := page_data.get("relevant_illness_mentions")) else None,
             }
-            # Filter out metadata fields with None values before adding to chunk
+            # Optional: Remove keys with None values from metadata for cleaner storage
             # metadata = {k: v for k, v in metadata.items() if v is not None}
+            logger.debug(f"  Metadata for chunk {chunk_id_counter}: {metadata}")
 
             # --- Create RAG Chunk Dictionary ---
+            # Define the final structure for each chunk entry
+            chunk_unique_id = f"{pdf_basename}_p{page_number}_c{chunk_id_counter}"
             rag_chunk_data = {
-                # Create a more robust unique ID if needed
-                "chunk_id": f"{pdf_basename}_p{page_number}_c{chunk_id_counter}",
-                "text_content": chunk_text,
-                "metadata": metadata,
+                "chunk_id": chunk_unique_id, # Construct a unique ID
+                "text_content": chunk_text, # The text itself
+                "metadata": metadata, # Associated metadata dictionary
             }
             rag_chunks.append(rag_chunk_data)
-            logger.debug(f"  Created RAG chunk: {rag_chunk_data['chunk_id']}")
+            logger.debug(f"  Created RAG chunk: {chunk_unique_id}")
 
-    logger.info(f"Formatted data into {len(rag_chunks)} chunks for RAG.")
+    logger.info(f"Formatted data into {len(rag_chunks)} chunks suitable for RAG.")
     return rag_chunks
 
 # Example usage block (for testing when script is run directly)
@@ -96,12 +130,12 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
     logger.info("--- Running formatter.py directly for testing ---")
 
-    # Example input data
+    # Example input data simulating output from previous steps
     sample_page_data_list = [
         { # Page 1
             "page_number": 1, "source_file": "test_doc.pdf", "temp_image_path": "temp/page_001.webp",
             "preprocessing_applied": True,
-            "extracted_text": "This is the first paragraph of page 1.\n\nThis is the second paragraph, which is a bit longer and contains some keywords like diabetes and hypertension.\n\nShort third para.",
+            "extracted_text": "First paragraph, definitely longer than fifty characters to pass the minimum length check.\n\nSecond paragraph, also made long enough for testing purposes.\n\nShort one.",
             "client_name": "Maria Souza", "document_date": "2025-04-20", "signature_found": True,
             "relevant_illness_mentions": ["diabetes", "hypertension"]
         },
@@ -112,15 +146,15 @@ if __name__ == "__main__":
             "client_name": "Maria Souza", "document_date": "2025-04-20", "signature_found": False,
             "relevant_illness_mentions": []
         },
-        { # Page 3 (with error)
+        { # Page 3 (Error)
             "page_number": 3, "source_file": "test_doc.pdf", "temp_image_path": "temp/page_003.webp",
             "error": "LLM Timeout", "extracted_text": "Processing Error"
         }
     ]
     sample_pdf_path = "example_docs/medical_report_01.pdf"
 
-    logger.info("\nInput Page Data (Sample):")
-    # logger.debug(json.dumps(sample_page_data_list, indent=2)) # Log full input at debug if needed
+    logger.info("\nInput Page Data (Sample - showing page numbers):")
+    for p in sample_page_data_list: logger.info(f"  Page: {p.get('page_number')}, Error: {p.get('error')}, Text Length: {len(p.get('extracted_text','')) if p.get('extracted_text') else 0}")
 
     # Format the data
     formatted_chunks = format_output_for_rag(sample_page_data_list, sample_pdf_path)
