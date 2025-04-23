@@ -1,22 +1,21 @@
 # -*- coding: utf-8 -*-
-"""
-Module responsible for splitting PDF files into individual page images.
+"""Handles splitting PDF files into individual page images.
 
-Handles potentially large PDFs by saving extracted pages as temporary
-image files on disk using WebP lossless format. Includes logging.
+This module provides functionality to take a potentially large PDF file
+as input and extract each page, saving it as a temporary image file
+on disk (using WebP lossless format) to conserve memory during processing.
+It utilizes the pypdfium2 library for PDF manipulation. Includes logging.
 """
 
 import pypdfium2 as pdfium
 import os
 import sys
-import logging # Import logging
+import logging
 from typing import Generator
+from PIL import Image # Import PIL Image explicitly for conversion
 
 # Get a logger instance for this module
 logger = logging.getLogger(__name__)
-
-# Define a constant for the scale factor
-DEFAULT_SCALE = 2
 
 # Define potential output directory for temporary page images
 TEMP_PAGE_DIR = "temp_pdf_pages" # Store temporary page images here
@@ -25,21 +24,31 @@ TEMP_PAGE_DIR = "temp_pdf_pages" # Store temporary page images here
 PageOutputType = str
 
 def split_pdf_to_pages(pdf_path: str) -> Generator[PageOutputType, None, None]:
-    """
-    Splits a large PDF file into individual page images saved temporarily on disk
-    in WebP lossless format.
+    """Splits a PDF into individual page images saved temporarily to disk.
+
+    Opens the specified PDF file, iterates through each page, renders the page
+    as an image at a defined scale (currently hardcoded), converts the rendered
+    bitmap to a PIL Image, and saves the image as a temporary WebP lossless
+    file in the TEMP_PAGE_DIR directory.
+    This function is a generator, yielding the path to each temporary image
+    file as it is created.
 
     Args:
-        pdf_path: The path to the input PDF file.
+        pdf_path: The absolute or relative path to the input PDF file.
 
     Yields:
-        Paths to temporary image files (WebP format) representing each page.
+        str: The file path to a temporary WebP image file representing a
+             single page of the PDF.
 
     Raises:
-        FileNotFoundError: If the pdf_path does not exist.
-        pdfium.PdfiumError: If there's an error processing the PDF with pypdfium2.
-        OSError: If the temporary directory cannot be created.
-        Exception: For other unexpected errors during processing.
+        FileNotFoundError: If the `pdf_path` does not point to an existing file.
+        OSError: If the temporary directory (`TEMP_PAGE_DIR`) cannot be created
+                 due to permissions or other OS-level issues.
+        pdfium.PdfiumError: If pypdfium2 encounters an error while loading or
+                            rendering the PDF (e.g., corrupted file, password
+                            protected without password).
+        Exception: For any other unexpected errors during processing (e.g.,
+                   errors during image saving).
     """
     if not os.path.isfile(pdf_path):
         error_msg = f"Input PDF not found at: {pdf_path}"
@@ -69,36 +78,47 @@ def split_pdf_to_pages(pdf_path: str) -> Generator[PageOutputType, None, None]:
             page_number = i + 1
             page = None
             bitmap = None
+            pil_image = None # Variable for PIL image
             temp_image_path = None
+            logger.debug(f"Processing page {page_number}...")
 
             try:
                 temp_image_filename = f"{temp_file_prefix}{page_number:04d}.webp"
                 temp_image_path = os.path.join(TEMP_PAGE_DIR, temp_image_filename)
 
                 page = pdf.get_page(i)
-                # Consider logging DPI/scale if configurable later
                 bitmap = page.render(scale=2) # Render at 144 DPI (example)
-                bitmap.save(temp_image_path, format="webp", lossless=True)
 
-                logger.debug(f"Successfully saved page {page_number} to: {temp_image_path} (WebP Lossless)") # Use DEBUG for per-page success
-                yield temp_image_path
+                # --- CORRECTION HERE ---
+                # Convert the PdfBitmap to a PIL Image first
+                pil_image = bitmap.to_pil()
+                # Now save the PIL Image
+                pil_image.save(temp_image_path, format="webp", lossless=True)
+                # --- END CORRECTION ---
+
+                logger.debug(f"Successfully saved page {page_number} to: {temp_image_path} (WebP Lossless)")
+                yield temp_image_path # Yield path to the saved image file
 
             except Exception as page_error:
                 logger.error(f"Error processing page {page_number} of '{pdf_path}': {page_error}", exc_info=True)
-                # Continue to next page if one fails
+                # Continue to next page if one fails, do not yield path
             finally:
+                # Ensure resources for the current page are released
+                if pil_image: pil_image.close() # Close PIL image if created
                 if bitmap: bitmap.close()
                 if page: page.close()
+                logger.debug(f"Closed resources for page {page_number}.")
 
         logger.info(f"Finished processing all pages for '{pdf_path}'.")
 
     except pdfium.PdfiumError as e:
         logger.error(f"Error processing PDF '{pdf_path}' with pypdfium2: {e}", exc_info=True)
-        raise
+        raise # Re-raise specific pypdfium2 errors
     except Exception as e:
         logger.error(f"An unexpected error occurred during PDF splitting for '{pdf_path}': {e}", exc_info=True)
-        raise
+        raise # Re-raise other unexpected errors
     finally:
+        # Ensure the main PDF document is closed if it was opened
         if pdf:
             pdf.close()
             logger.info(f"Closed PDF document: {pdf_path}")
@@ -115,6 +135,7 @@ if __name__ == "__main__":
         logger.info(f"Testing PDF splitting for '{test_pdf_path}' (saving temporary WebP lossless images):")
         generated_paths = []
         try:
+            # Consume the generator to execute the splitting process
             generated_paths = list(split_pdf_to_pages(test_pdf_path))
             page_count = len(generated_paths)
             logger.info(f"Successfully yielded {page_count} temporary page image paths.")
@@ -142,6 +163,7 @@ if __name__ == "__main__":
                             logger.warning(f"Error removing file {p}: {e}")
                 logger.info(f"Removed {files_removed_count} temporary image files.")
 
+            # Attempt to remove the temporary directory if it exists and is empty
             try:
                 if os.path.exists(TEMP_PAGE_DIR) and not os.listdir(TEMP_PAGE_DIR):
                     os.rmdir(TEMP_PAGE_DIR)
