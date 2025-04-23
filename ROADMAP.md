@@ -71,7 +71,7 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 * [x] **Definir formato de saída estruturado (ex: lista de JSONs, um por página/chunk) otimizado para RAG.** (Função inicial criada, definição pode ser refinada).
 * [x] Implementar função em `formatter.py` para gerar essa saída estruturada a partir dos dados extraídos de cada página. (Função inicial criada, chunking básico implementado).
 * [ ] Implementar a exibição (talvez resumida) do resultado no console.
-* [ ] Implementar a opção de salvar a saída estruturada completa em um arquivo (ex: `.jsonl`).
+* [x] Implementar a opção de salvar a saída estruturada completa em um arquivo (ex: `.jsonl`).
 * [x] Integrar o tratamento de saída no final do processamento do PDF em `src/main.py`.
 * [ ] Realizar commit das funcionalidades de tratamento de saída para RAG.
 
@@ -95,8 +95,8 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 * [x] Criar a estrutura da pasta `tests/`.
 * [x] Escrever testes unitários e de integração (incluindo vetorização). (Iniciado com testes para formatter e image_processor).
 * [ ] Refatorar código (clareza, eficiência, manutenibilidade).
-* [ ] Adicionar/Melhorar docstrings.
-* [ ] Atualizar `README.md` com instruções de uso completas.
+* [x] Adicionar/Melhorar docstrings. (Módulos principais concluídos).
+* [x] Atualizar `README.md` com instruções de uso completas.
 * [ ] Realizar commit da versão final do CLI.
 
 **Fase 7: Futuro - Integração com `modular-dashboard`**
