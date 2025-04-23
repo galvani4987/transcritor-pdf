@@ -94,7 +94,7 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 * [x] Adicionar logging adequado.
 * [x] Criar a estrutura da pasta `tests/`.
 * [x] Escrever testes unitários e de integração (incluindo vetorização). (Iniciado com testes para formatter e image_processor).
-* [ ] Refatorar código (clareza, eficiência, manutenibilidade). (Iniciando refatoração do vector_store_handler para asyncpg).
+* [x] Refatorar código (clareza, eficiência, manutenibilidade). (Refatorado vector_store_handler para asyncpg).
 * [x] Adicionar/Melhorar docstrings. (Módulos principais concluídos).
 * [x] Atualizar `README.md` com instruções de uso completas.
 * [ ] Realizar commit da versão final do CLI.
