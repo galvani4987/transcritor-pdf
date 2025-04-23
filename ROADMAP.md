@@ -78,7 +78,7 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 **Fase 5: Vetorização e Armazenamento (Módulo `src/vectorizer`)**
 
 * [x] Escolher biblioteca e modelo de embedding: **OpenAI `text-embedding-3-small` via API**. Adicionar dependência `langchain-openai` ao `requirements.txt` e instalar.
-* [x] Escolher Vector DB: **PostgreSQL com extensão vetorial** (pré-existente no `modular-dashboard`). Adicionar dependência `psycopg2-binary` ao `requirements.txt` e instalar.
+* [x] Escolher Vector DB: **PostgreSQL com extensão vetorial** (pré-existente no `modular-dashboard`). Adicionar dependência `asyncpg` (+ `psycopg2-binary` se necessário para compatibilidade) ao `requirements.txt` e instalar.
 * [x] Criar módulo `src/vectorizer/` com `__init__.py`.
 * [x] Criar `src/vectorizer/embedding_generator.py`.
 * [x] Implementar lógica para gerar embeddings (usando OpenAI) para os chunks de texto da saída formatada (Fase 4).
@@ -94,7 +94,7 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 * [x] Adicionar logging adequado.
 * [x] Criar a estrutura da pasta `tests/`.
 * [x] Escrever testes unitários e de integração (incluindo vetorização). (Iniciado com testes para formatter e image_processor).
-* [ ] Refatorar código (clareza, eficiência, manutenibilidade).
+* [ ] Refatorar código (clareza, eficiência, manutenibilidade). (Iniciando refatoração do vector_store_handler para asyncpg).
 * [x] Adicionar/Melhorar docstrings. (Módulos principais concluídos).
 * [x] Atualizar `README.md` com instruções de uso completas.
 * [ ] Realizar commit da versão final do CLI.

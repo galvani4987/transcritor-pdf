@@ -33,3 +33,4 @@ psycopg2-binary # PostgreSQL adapter for Python (for pgvector interaction)
 # langchain-postgres # Langchain integration for pgvector (Consider adding later)
 # --- Testing ---
 pytest # Framework for running tests
+asyncpg # Async PostgreSQL driver (preferred for asyncio)
