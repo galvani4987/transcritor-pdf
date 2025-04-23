@@ -4,7 +4,8 @@ Main entry point for the Transcritor PDF CLI application.
 
 Orchestrates the workflow: split PDF -> load page -> preprocess page ->
 extract text -> parse info -> format output (RAG chunks) -> generate embeddings -> store in DB.
-Includes basic logging configuration, optional output file saving, and initial PDF validation.
+Includes basic logging configuration, optional output file saving, initial PDF validation,
+and a summary output to the console.
 """
 import argparse
 import sys
@@ -12,12 +13,6 @@ import os
 import json
 import asyncio
 import logging
-# Import pypdfium2 for initial validation
-try:
-    import pypdfium2 as pdfium
-except ImportError:
-    logging.critical("pypdfium2 library not found. Please install it: pip install pypdfium2")
-    sys.exit(1)
 
 # --- Logging Configuration ---
 logging.basicConfig(
@@ -28,7 +23,12 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # --- Module Imports ---
-# Imports moved after initial validation where possible
+try:
+    import pypdfium2 as pdfium
+except ImportError:
+    logging.critical("pypdfium2 library not found. Please install it: pip install pypdfium2")
+    sys.exit(1)
+
 from .input_handler.pdf_splitter import split_pdf_to_pages, TEMP_PAGE_DIR
 from .input_handler.loader import load_page_image
 from .preprocessor.image_processor import preprocess_image
@@ -41,8 +41,10 @@ from .vectorizer.vector_store_handler import add_chunks_to_vector_store
 # --- Utility function for cleaning up temporary files ---
 def cleanup_temp_files(temp_files: list[str]):
     """Removes the temporary files created during processing."""
-    logger.info("Cleaning up temporary page files...")
+    if not temp_files: return # Avoid logging if list is empty
+    logger.info(f"Cleaning up {len(temp_files)} temporary page files...")
     files_removed_count = 0
+    # ...(cleanup logic remains the same)...
     for file_path in temp_files:
         if file_path and isinstance(file_path, str) and os.path.exists(file_path):
             try:
@@ -52,15 +54,72 @@ def cleanup_temp_files(temp_files: list[str]):
                 logger.warning(f"Could not remove temp file {file_path}: {e}")
         elif file_path:
              logger.warning(f"Temp file path '{file_path}' not found for cleanup.")
-
     logger.info(f"Removed {files_removed_count} temporary files.")
-
     try:
         if os.path.exists(TEMP_PAGE_DIR) and not os.listdir(TEMP_PAGE_DIR):
             os.rmdir(TEMP_PAGE_DIR)
             logger.info(f"Removed empty temporary directory: {TEMP_PAGE_DIR}")
     except OSError as e:
         logger.warning(f"Could not remove temp directory {TEMP_PAGE_DIR}: {e}")
+
+
+# --- Utility function to save output ---
+def save_rag_chunks_to_jsonl(rag_chunks: list[dict], output_file_path: str):
+    """Saves the list of RAG chunks to a JSON Lines file."""
+    logger.info(f"Saving {len(rag_chunks)} RAG chunks to: {output_file_path}")
+    try:
+        with open(output_file_path, 'w', encoding='utf-8') as f:
+            for chunk_data in rag_chunks:
+                # Ensure embedding is list before saving (json cannot serialize numpy arrays directly)
+                if 'embedding' in chunk_data and isinstance(chunk_data['embedding'], (list, tuple)):
+                     # Convert numpy floats if necessary? Assume list of floats for now.
+                     pass
+                elif 'embedding' in chunk_data:
+                     logger.warning(f"Chunk {chunk_data.get('chunk_id')} has non-list embedding, saving as null.")
+                     chunk_data['embedding'] = None # Set to null if not list
+
+                json_record = json.dumps(chunk_data, ensure_ascii=False)
+                f.write(json_record + '\n')
+        logger.info("Successfully saved output file.")
+    except IOError as e:
+        logger.error(f"Failed to write output file '{output_file_path}': {e}", exc_info=True)
+    except TypeError as e:
+         logger.error(f"Failed to serialize chunk data to JSON: {e}", exc_info=True)
+
+
+# --- Utility function to display summary ---
+def display_summary(all_pages_data: list[dict], rag_chunks: list[dict]):
+    """Displays a summary of the processing results to the console."""
+    print("\n" + "="*30 + " Processing Summary " + "="*30) # Use print for final user output
+
+    processed_pages_count = len([p for p in all_pages_data if not p.get("error") and p.get("extracted_text") not in ["Extraction Failed", "Processing Error", "Loading Error"]])
+    total_pages_encountered = len(all_pages_data) # Total pages attempted (includes errors)
+    rag_chunk_count = len(rag_chunks)
+
+    print(f"Total Pages Encountered: {total_pages_encountered}")
+    print(f"Pages Processed Successfully (Text Extracted/Parsed): {processed_pages_count}")
+    print(f"RAG Chunks Generated: {rag_chunk_count}")
+
+    if processed_pages_count > 0:
+        print("\n--- Sample Extracted Info (First few pages) ---")
+        pages_to_show = 3
+        shown_count = 0
+        for page_data in all_pages_data:
+            # Show sample only for pages processed without error and with some parsed data
+            if not page_data.get("error") and page_data.get("extracted_text") not in ["Extraction Failed", "Processing Error", "Loading Error"]:
+                if shown_count >= pages_to_show:
+                    break
+                print(f"\nPage {page_data.get('page_number', '?')}:")
+                print(f"  Client Name: {page_data.get('client_name', 'N/A')}")
+                print(f"  Document Date: {page_data.get('document_date', 'N/A')}")
+                print(f"  Signature Found: {page_data.get('signature_found', 'N/A')}")
+                text_snippet = (page_data.get('extracted_text') or "")[:100].replace('\n', ' ') + "..."
+                print(f"  Text Snippet: {text_snippet}")
+                shown_count += 1
+        if shown_count == 0:
+             print("  (No pages with successfully parsed info to display sample)")
+
+    print("="*80)
 
 
 # --- Main Pipeline Function (async) ---
@@ -73,8 +132,7 @@ async def run_transcription_pipeline(pdf_file_path: str, output_file: str | None
         output_file: Optional path to save the formatted RAG chunks as a JSONL file.
     """
     logger.info(f"Starting transcription pipeline for: {pdf_file_path}")
-    if output_file:
-        logger.info(f"Output will be saved to: {output_file}")
+    if output_file: logger.info(f"Output will be saved to: {output_file}")
 
     temp_page_paths = []
     all_extracted_data = []
@@ -85,23 +143,20 @@ async def run_transcription_pipeline(pdf_file_path: str, output_file: str | None
         page_path_generator = split_pdf_to_pages(pdf_file_path)
 
         page_number = 0
+        # --- Page Processing Loop ---
         for page_path in page_path_generator:
             page_number += 1
-            temp_page_paths.append(page_path)
+            temp_page_paths.append(page_path) # Track created files
             logger.info(f"--- Processing Page {page_number} (File: {page_path}) ---")
             page_image = None; processed_page_image = None; extracted_text = None; parsed_info = None
-
             try:
                 logger.info("--- Step 2: Loading Page Image ---")
                 page_image = load_page_image(page_path)
-
                 if page_image:
                     logger.info("--- Step 3: Preprocessing Page Image ---")
                     processed_page_image = preprocess_image(page_image)
-
                     logger.info("--- Step 4: Extracting Text ---")
                     extracted_text = extract_text_from_image(processed_page_image)
-
                     if extracted_text:
                         logger.info("--- Step 4.5: Parsing Extracted Text ---")
                         parsed_info = parse_extracted_info(extracted_text)
@@ -109,7 +164,6 @@ async def run_transcription_pipeline(pdf_file_path: str, output_file: str | None
                     else:
                         logger.warning("  Text extraction failed for this page.")
                         parsed_info = {}
-
                     page_data = {
                         "page_number": page_number, "source_file": pdf_file_path,
                         "temp_image_path": page_path, "preprocessing_applied": True,
@@ -117,7 +171,6 @@ async def run_transcription_pipeline(pdf_file_path: str, output_file: str | None
                         **(parsed_info if parsed_info else {})
                     }
                     all_extracted_data.append(page_data)
-
             except FileNotFoundError as e:
                  logger.error(f"Could not load page image: {e}. Skipping page {page_number}.")
                  all_extracted_data.append({"page_number": page_number, "error": f"File not found: {e}", "extracted_text": "Loading Error"})
@@ -127,11 +180,12 @@ async def run_transcription_pipeline(pdf_file_path: str, output_file: str | None
             finally:
                 if page_image: page_image.close()
                 if processed_page_image: processed_page_image.close()
-
+        # --- End Page Processing Loop ---
 
         if not all_extracted_data:
              logger.warning("No data was successfully processed from any page.")
         else:
+            # --- Post-Loop Processing ---
             logger.info("--- Step 5: Formatting Output for RAG ---")
             rag_chunks = format_output_for_rag(all_extracted_data, pdf_file_path)
 
@@ -154,32 +208,20 @@ async def run_transcription_pipeline(pdf_file_path: str, output_file: str | None
             else:
                 logger.warning("No RAG chunks were generated, skipping embedding and storage.")
 
+        # --- Display Summary ---
+        display_summary(all_extracted_data, rag_chunks)
+
         logger.info("Pipeline finished successfully.")
 
-    # Keep general exception handler for unexpected errors within the pipeline
     except Exception as pipeline_error:
-        # Log the error that occurred *during* the pipeline steps
-        logger.critical(f"Pipeline Error: An unexpected error occurred during processing: {pipeline_error}", exc_info=True)
-        # Re-raise the exception so it's caught by the outer handler in main_cli,
-        # which will trigger cleanup and exit.
+        # Catch any error that occurred during the pipeline steps
+        logger.critical(f"Pipeline Error: Processing failed. Error: {pipeline_error}", exc_info=True)
+        # Re-raise the exception to be caught by main_cli
         raise
-    # No finally block here for cleanup, as it should be handled by the caller (main_cli)
-
-
-# --- Utility function to save output ---
-def save_rag_chunks_to_jsonl(rag_chunks: list[dict], output_file_path: str):
-    """Saves the list of RAG chunks to a JSON Lines file."""
-    logger.info(f"Saving {len(rag_chunks)} RAG chunks to: {output_file_path}")
-    try:
-        with open(output_file_path, 'w', encoding='utf-8') as f:
-            for chunk_data in rag_chunks:
-                json_record = json.dumps(chunk_data, ensure_ascii=False)
-                f.write(json_record + '\n')
-        logger.info("Successfully saved output file.")
-    except IOError as e:
-        logger.error(f"Failed to write output file '{output_file_path}': {e}", exc_info=True)
-    except TypeError as e:
-         logger.error(f"Failed to serialize chunk data to JSON: {e}", exc_info=True)
+    finally:
+        # --- Cleanup ---
+        # This block executes whether the try block succeeded or failed
+        cleanup_temp_files(temp_page_paths)
 
 
 # --- CLI Argument Parsing and Execution ---
@@ -191,67 +233,41 @@ def main_cli():
     parser = argparse.ArgumentParser(
         description="Process a PDF file, extract info, format for RAG, generate embeddings, and store in DB."
     )
-    parser.add_argument(
-        "pdf_file_path",
-        type=str,
-        help="Path to the PDF file to be processed."
-    )
-    parser.add_argument(
-        "-o", "--output-file",
-        type=str,
-        default=None,
-        help="Optional path to save the formatted RAG chunks as a JSON Lines (.jsonl) file."
-    )
+    parser.add_argument("pdf_file_path", type=str, help="Path to the PDF file.")
+    parser.add_argument("-o", "--output-file", type=str, default=None, help="Optional path to save RAG chunks (.jsonl).")
     args = parser.parse_args()
 
-    # --- Initial Input Validation ---
     pdf_path = args.pdf_file_path
     logger.info(f"Validating input file: {pdf_path}")
-
     if not os.path.isfile(pdf_path):
         logger.critical(f"Input Error: File not found at '{pdf_path}'")
         sys.exit(1)
 
-    # --- Attempt to open PDF early to catch basic errors ---
     pdf_doc = None
     try:
-        # Try opening with pypdfium2 (catches password errors, basic corruption)
         pdf_doc = pdfium.PdfDocument(pdf_path)
         logger.info(f"Successfully opened PDF for initial validation ({len(pdf_doc)} pages).")
-        # We don't need to keep it open, just check if it *can* be opened.
         pdf_doc.close()
     except pdfium.errors.PasswordError:
         logger.critical(f"Input Error: PDF file '{pdf_path}' is password protected.")
         sys.exit(1)
     except pdfium.errors.PdfiumError as e:
-        # Catch other pypdfium2 errors (e.g., format errors, corruption)
-        logger.critical(f"Input Error: Failed to open or process PDF '{pdf_path}' with pypdfium2. Error: {e}", exc_info=True)
+        logger.critical(f"Input Error: Failed to open/process PDF '{pdf_path}'. Error: {e}", exc_info=True)
         sys.exit(1)
     except Exception as e:
-        # Catch any other unexpected error during the open attempt
-        logger.critical(f"Input Error: An unexpected error occurred while validating PDF '{pdf_path}': {e}", exc_info=True)
-        if pdf_doc: pdf_doc.close() # Ensure close if partially opened
+        logger.critical(f"Input Error: Unexpected error validating PDF '{pdf_path}': {e}", exc_info=True)
+        if pdf_doc: pdf_doc.close()
         sys.exit(1)
 
     # --- Run the Async Pipeline ---
-    # If initial validation passed, proceed with the main processing.
-    temp_files_list = [] # Define list here to be accessible in finally
     try:
         logger.info(f"Starting main processing pipeline for: {pdf_path}")
-        # Pass output file argument to the pipeline function
-        # asyncio.run will execute the async function and block until it completes
-        # We need to capture the temp_files list if the pipeline modifies it directly
-        # Modification: Let run_transcription_pipeline return temp_files list?
-        # Simpler approach: rely on the finally block of run_transcription_pipeline (if added back)
-        # OR handle cleanup here based on TEMP_PAGE_DIR? Let's assume cleanup is handled within run_transcription_pipeline for now.
         asyncio.run(run_transcription_pipeline(pdf_path, args.output_file))
         logger.info("--- Transcritor PDF CLI Finished Successfully ---")
     except Exception as e:
-        # Catch errors bubbled up from the pipeline (already logged)
+        # Errors from pipeline should already be logged critically
         logger.info("--- Transcritor PDF CLI Finished with Errors ---")
-        # Cleanup might have already been attempted in run_transcription_pipeline's except block
-        # We could add another cleanup attempt here just in case, but it might be redundant.
-        sys.exit(1)
+        sys.exit(1) # Exit with error code
 
 
 if __name__ == "__main__":
