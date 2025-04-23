@@ -38,7 +38,7 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 * [x] Criar `src/preprocessor/image_processor.py`.
 * [x] Pesquisar e decidir sobre técnicas de pré-processamento de imagem para manuscritos. **(Concluído: Pesquisa indicou pipeline com Scikit-image: Deskew -> Grayscale -> Median -> CLAHE -> Sauvola)**
 * [x] Adicionar dependência `scikit-image` ao `requirements.txt` e instalar.
-* [ ] Implementar **Deskewing** (Correção de Inclinação) em `image_processor.py` (pode requerer pesquisa adicional de implementação com Scikit-image/OpenCV).
+* [x] Implementar **Deskewing** (Correção de Inclinação) em `image_processor.py`.
 * [x] Implementar **Conversão para Escala de Cinza** em `image_processor.py`.
 * [x] Implementar **Filtro de Mediana** (Redução de Ruído) em `image_processor.py` usando Scikit-image.
 * [x] Implementar **CLAHE** (Melhora de Contraste) em `image_processor.py` usando Scikit-image.
