@@ -59,7 +59,7 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 * [x] Desenvolver prompt/cadeia Langchain para extrair texto (OCR) **da imagem da página pré-processada**.
 * [x] Criar `src/extractor/info_parser.py`.
 * [x] Desenvolver prompt/cadeia Langchain para analisar o texto extraído **da página** e identificar/extrair informações chave (JSON Output).
-* [ ] Refinar prompts para precisão e custo **por página** (tanto para text_extractor quanto info_parser).
+* [x] Refinar prompts para precisão e custo **por página** (tanto para text_extractor quanto info_parser). (Refinamento inicial concluído).
 * [x] Implementar tratamento de erros para chamadas à API LLM (mais robusto).
 * [x] Integrar as etapas de extração (text_extractor) no loop de página em `src/main.py`.
 * [x] Integrar a chamada ao `info_parser` no loop de página em `src/main.py`.

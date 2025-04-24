@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 """Extracts text content from preprocessed page images using a multimodal LLM.
 
-Includes specific error handling for OpenAI API exceptions.
+Includes specific error handling for OpenAI API exceptions and a refined prompt.
 """
 
 import base64
 import io
 import sys
 import logging
+import os # Added os import for example usage
 from typing import Optional
 from PIL import Image
 # Import the function to get the initialized LLM client
@@ -17,18 +18,11 @@ from langchain_core.messages import HumanMessage
 # Import specific OpenAI exceptions for handling
 try:
     from openai import (
-        APIError,             # Base class for API errors
-        APIConnectionError,   # Network issues
-        APITimeoutError,      # Request timed out
-        AuthenticationError,  # Invalid API key / auth issues
-        BadRequestError,      # Invalid request (e.g., bad params, model not found)
-        PermissionDeniedError,# Key lacks permission for the resource
-        RateLimitError        # Rate limit exceeded
+        APIError, APIConnectionError, APITimeoutError, AuthenticationError,
+        BadRequestError, PermissionDeniedError, RateLimitError
     )
     OPENAI_ERRORS_AVAILABLE = True
 except ImportError:
-    # Define dummy exceptions if openai library isn't installed or has changed structure
-    # This allows the code to load but fail gracefully if errors occur later.
     OPENAI_ERRORS_AVAILABLE = False
     class APIError(Exception): pass
     class APIConnectionError(APIError): pass
@@ -38,7 +32,6 @@ except ImportError:
     class PermissionDeniedError(APIError): pass
     class RateLimitError(APIError): pass
     logging.warning("openai library not found or exceptions changed. Specific API error handling may be limited.")
-
 
 # Get a logger instance for this module
 logger = logging.getLogger(__name__)
@@ -86,49 +79,39 @@ def extract_text_from_image(image: Image.Image) -> Optional[str]:
         base64_data_uri = encode_image_to_base64(image, format="WEBP")
         logger.debug(f"Image successfully encoded (URI length: {len(base64_data_uri)}).")
 
+        # --- Refined Prompt ---
+        prompt_text = (
+            "This is an image of a potentially handwritten medical document page, likely in Portuguese. "
+            "The image may have been preprocessed to enhance text visibility. "
+            "Extract all the text content from this image. "
+            "Preserve the original structure (paragraphs, line breaks) as accurately as possible. "
+            "Output only the extracted text, without any additional commentary or formatting."
+        )
+        # --- End Refined Prompt ---
+
         message = HumanMessage(
             content=[
-                {"type": "text", "text": "Extract all text content..."}, # Keep prompt concise here
+                {"type": "text", "text": prompt_text}, # Use the refined prompt text
                 {"type": "image_url", "image_url": {"url": base64_data_uri}},
             ]
         )
 
-        logger.info("Sending image and prompt to LLM for text extraction...")
-        # --- Enhanced Error Handling around invoke ---
+        logger.info("Sending image and refined prompt to LLM for text extraction...")
         response = None
         try:
             response = llm.invoke([message])
         except AuthenticationError as e:
             logger.critical(f"OpenAI API Authentication Error: Invalid API Key? {e}", exc_info=True)
-            # Fail fast for auth errors
             raise RuntimeError("API Authentication Failed") from e
         except PermissionDeniedError as e:
              logger.critical(f"OpenAI API Permission Error: Key lacks permission for model/resource? {e}", exc_info=True)
              raise RuntimeError("API Permission Denied") from e
-        except RateLimitError as e:
-            logger.error(f"OpenAI API Rate Limit Exceeded: {e}", exc_info=True)
-            # TODO: Implement retry logic here? For now, return None.
-            return None
-        except APITimeoutError as e:
-             logger.error(f"OpenAI API Timeout Error: {e}", exc_info=True)
-             # TODO: Implement retry logic here? For now, return None.
-             return None
-        except APIConnectionError as e:
-             logger.error(f"OpenAI API Connection Error: Network issue? {e}", exc_info=True)
-             # Possibly retry? For now, return None.
-             return None
-        except BadRequestError as e:
-             # E.g., Invalid request, prompt too long, model not found
-             logger.error(f"OpenAI API Bad Request Error: {e}", exc_info=True)
-             # Usually not recoverable, return None. Check e.code if needed.
-             return None
-        except APIError as e: # Catch other OpenAI API errors (like 5xx server errors)
-             logger.error(f"OpenAI API Error (Server issue?): {e}", exc_info=True)
-             # Possibly retry? For now, return None.
-             return None
-        # --- End Enhanced Error Handling ---
+        except RateLimitError as e: logger.error(f"OpenAI API Rate Limit Exceeded: {e}", exc_info=True); return None
+        except APITimeoutError as e: logger.error(f"OpenAI API Timeout Error: {e}", exc_info=True); return None
+        except APIConnectionError as e: logger.error(f"OpenAI API Connection Error: Network issue? {e}", exc_info=True); return None
+        except BadRequestError as e: logger.error(f"OpenAI API Bad Request Error: {e}", exc_info=True); return None
+        except APIError as e: logger.error(f"OpenAI API Error (Server issue?): {e}", exc_info=True); return None
 
-        # Process successful response
         if hasattr(response, 'content') and isinstance(response.content, str):
             extracted_text = response.content
             logger.info("LLM text extraction successful.")
@@ -138,19 +121,12 @@ def extract_text_from_image(image: Image.Image) -> Optional[str]:
             logger.error(f"Unexpected LLM response format or type after successful call. Response: {response}")
             return None
 
-    except TypeError as e: # Catch TypeError from input validation
-        logger.error(f"Type error during text extraction setup: {e}", exc_info=True)
-        raise
-    except RuntimeError as e: # Catch client initialization errors
-         logger.error(f"LLM client runtime error during text extraction: {e}", exc_info=True)
-         raise
-    except Exception as e: # Catch other unexpected errors (e.g., encoding)
-        logger.error(f"An unexpected error occurred during text extraction: {e}", exc_info=True)
-        return None
+    except TypeError as e: logger.error(f"Type error during text extraction setup: {e}", exc_info=True); raise
+    except RuntimeError as e: logger.error(f"LLM client runtime error during text extraction: {e}", exc_info=True); raise
+    except Exception as e: logger.error(f"An unexpected error occurred during text extraction: {e}", exc_info=True); return None
 
 # Example usage block (remains the same)
 if __name__ == "__main__":
-    # ...(Testing block remains unchanged)...
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
     logger.info("--- Running text_extractor.py directly for testing ---")
     test_image_dir = "temp_test_loader"; test_image_path = os.path.join(test_image_dir, "processed_skimage_test_image.png")
