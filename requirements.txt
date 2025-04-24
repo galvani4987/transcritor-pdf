@@ -34,3 +34,4 @@ psycopg2-binary # PostgreSQL adapter for Python (for pgvector interaction)
 # --- Testing ---
 pytest # Framework for running tests
 asyncpg # Async PostgreSQL driver (preferred for asyncio)
+pytest-mock # Pytest fixture for patching/mocking
