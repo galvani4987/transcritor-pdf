@@ -30,7 +30,7 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
     * Receber o caminho do PDF.
     * Chamar o `pdf_splitter` para obter os caminhos das páginas.
     * **Iterar sobre cada caminho de página**, chamando as fases seguintes (placeholders) para cada uma.
-* [ ] Realizar commit das funcionalidades de tratamento de entrada e divisão de PDF.
+* [x] Realizar commit das funcionalidades de tratamento de entrada e divisão de PDF.
 
 **Fase 2: Pré-processamento por Página (Módulo `src/preprocessor`)**
 
@@ -45,7 +45,7 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 * [x] Implementar **Binarização Sauvola** em `image_processor.py` usando Scikit-image.
 * [ ] Implementar [Opcional] **Recorte de Bordas** em `image_processor.py`.
 * [x] Integrar a chamada à função `preprocess_image` no loop de página em `src/main.py`.
-* [ ] Realizar commit das funcionalidades de pré-processamento.
+* [x] Realizar commit das funcionalidades de pré-processamento.
 * [ ] _(Pendente)_ Pesquisar como usar `Docling` (ou similar) para análise de layout **em cada imagem de página** (detectar blocos de texto, áreas de assinatura).
 * [ ] _(Pendente)_ Criar `src/preprocessor/layout_analyzer.py` (ou integrar).
 * [ ] _(Pendente)_ Implementar a integração com `Docling` para obter informações de layout **por página**.
@@ -60,10 +60,10 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 * [x] Criar `src/extractor/info_parser.py`.
 * [x] Desenvolver prompt/cadeia Langchain para analisar o texto extraído **da página** e identificar/extrair informações chave (JSON Output).
 * [ ] Refinar prompts para precisão e custo **por página** (tanto para text_extractor quanto info_parser).
-* [ ] Implementar tratamento de erros para chamadas à API LLM (mais robusto).
+* [x] Implementar tratamento de erros para chamadas à API LLM (mais robusto).
 * [x] Integrar as etapas de extração (text_extractor) no loop de página em `src/main.py`.
 * [x] Integrar a chamada ao `info_parser` no loop de página em `src/main.py`.
-* [ ] Realizar commit das funcionalidades de extração por página.
+* [x] Realizar commit das funcionalidades de extração por página.
 
 **Fase 4: Tratamento da Saída para RAG (Módulo `src/output_handler`)**
 
@@ -73,7 +73,7 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 * [x] Implementar a exibição (talvez resumida) do resultado no console.
 * [x] Implementar a opção de salvar a saída estruturada completa em um arquivo (ex: `.jsonl`).
 * [x] Integrar o tratamento de saída no final do processamento do PDF em `src/main.py`.
-* [ ] Realizar commit das funcionalidades de tratamento de saída para RAG.
+* [x] Realizar commit das funcionalidades de tratamento de saída para RAG.
 
 **Fase 5: Vetorização e Armazenamento (Módulo `src/vectorizer`)**
 
@@ -86,7 +86,7 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 * [x] Implementar lógica para inicializar/conectar ao PostgreSQL.
 * [x] Implementar lógica para adicionar/atualizar os vetores e metadados na tabela PostgreSQL apropriada.
 * [x] Integrar a etapa de vetorização no fluxo principal (`main.py`), após a Fase 4.
-* [ ] Realizar commit da funcionalidade de vetorização.
+* [x] Realizar commit da funcionalidade de vetorização.
 
 **Fase 6: Integração Final, Testes e Refinamento**
 
