@@ -1,6 +1,6 @@
 # Roadmap - Transcritor PDF
 
-Este documento detalha as fases e tarefas planejadas para o desenvolvimento do projeto `transcritor-pdf`. Usaremos checkboxes (`[ ]` pendente, `[x]` concluído) para acompanhar o progresso. **Nota:** Requisitos atualizados em 22/04/2025 para incluir processamento página-a-página, objetivo final de RAG, e interação com Vector DB.
+Este documento detalha as fases e tarefas planejadas para o desenvolvimento do projeto `transcritor-pdf`. Usaremos checkboxes (`[ ]` pendente, `[x]` concluído) para acompanhar o progresso. **Nota:** Requisitos atualizados em 24/04/2025 para incluir processamento página-a-página, objetivo final de RAG, e interação com Vector DB.
 
 **Fase 0: Configuração Inicial e Planejamento**
 
@@ -93,7 +93,7 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 * [ ] Revisar a integração de todos os módulos no pipeline principal (loop por página + vetorização).
 * [x] Adicionar logging adequado.
 * [x] Criar a estrutura da pasta `tests/`.
-* [x] Escrever testes unitários e de integração (incluindo vetorização). (Iniciado com testes para formatter e image_processor).
+* [x] Escrever testes unitários e de integração (incluindo vetorização). (Testes unitários com mocks para módulos principais concluídos).
 * [x] Refatorar código (clareza, eficiência, manutenibilidade). (Refatorado vector_store_handler para asyncpg).
 * [x] Adicionar/Melhorar docstrings. (Módulos principais concluídos).
 * [x] Atualizar `README.md` com instruções de uso completas.
