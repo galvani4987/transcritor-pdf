@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Parses structured information (entities) from raw extracted text using an LLM.
 Defines the chain within the parsing function. Includes logging and specific
-OpenAI API error handling.
+OpenAI API error handling. Uses refined prompt.
 """
 
 import json
@@ -13,7 +13,7 @@ from .llm_client import get_llm_client
 # Import Langchain components
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import PromptTemplate
-# Import Langchain and OpenAI exceptions
+# Import the exception for specific handling
 from langchain_core.exceptions import OutputParserException
 try:
     from openai import (
@@ -38,25 +38,28 @@ logger = logging.getLogger(__name__)
 # --- Output Parser ---
 parser = JsonOutputParser()
 
-# --- Prompt Template String (Defined line by line) ---
+# --- Prompt Template String (Refined Version) ---
+# Defined line by line to avoid formatting issues
 prompt_lines = [
-    "Analyze the following text extracted from a medical document page.",
-    "Identify and extract the following information:",
-    "- client_name: The patient's full name (null if none).",
-    "- document_date: The document's date (YYYY-MM-DD if possible, else as written; null if none).",
-    "- signature_found: Boolean (true/false) indicating if a professional signature is present/implied.",
-    "- relevant_illness_mentions: List of strings with key medical conditions/symptoms (empty list [] if none).",
+    "Analyze the following text, which was automatically extracted from a scanned page of a handwritten medical document and may contain OCR errors.",
+    "Carefully identify and extract the following specific pieces of information:",
     "",
-    "Return ONLY a valid JSON object with these exact keys. No explanations.",
+    '1.  **client_name**: The full name of the patient. Look for labels like "Paciente:" or "Nome:", or identify the name usually mentioned near the top/beginning of the document. Distinguish it from the doctor\'s name, which often appears at the end near the signature. If no patient name is clearly identifiable, return null.',
+    '2.  **document_date**: The date the document was issued or signed. Look for dates in DD-MM-AA or DD-MM-AAAA format. Normalize any valid date found to the **DD-MM-AAAA** format. If multiple dates exist, prefer the main date of the document (often near the location or signature). If no date is clearly identifiable, return null.',
+    '3.  **signature_found**: Return `true` if you find evidence of a professional signature (e.g., a doctor\'s name followed by "CRM", "CRO", "COREN", etc., or text indicating an electronic/digital signature, or a clearly demarcated signature area, typically at the bottom). Otherwise, return `false`.',
+    '4.  **relevant_illness_mentions**: Create a list of all specific medical terms mentioned in the text that indicate a disease, illness, condition, diagnosis, significant symptom, or abnormality (e.g., "Faringite Aguda", "diabetes", "hipertensão", "CID J02.9", "febre", "lesão"). Do *not* include terms indicating normality (e.g., "sem alterações", "normal", "ausência de lesões"). If no such terms indicating abnormality are found, return an empty list `[]`.',
     "",
-    "Extracted Text:",
+    "**Output Format:** Return ONLY a valid JSON object containing these exact keys (`client_name`, `document_date`, `signature_found`, `relevant_illness_mentions`). Do not include any explanations, introductory text, or markdown formatting around the JSON object.",
+    "",
+    "**Extracted Text:**",
     "```text",
     "{extracted_text}",
     "```",
     "",
-    "JSON Output:",
+    "**JSON Output:**",
 ]
 prompt_template_str = "\n".join(prompt_lines)
+
 
 # Create the prompt template object at module level
 prompt = PromptTemplate(
@@ -75,7 +78,8 @@ def parse_extracted_info(raw_text: str) -> Optional[Dict[str, Any]]:
         raw_text: The raw text content extracted from a document page.
 
     Returns:
-        A dictionary containing the parsed information if successful, otherwise None.
+        A dictionary containing the parsed information if successful,
+        otherwise None.
 
     Raises:
         RuntimeError: If the LLM client cannot be initialized or critical API errors occur.
@@ -87,20 +91,13 @@ def parse_extracted_info(raw_text: str) -> Optional[Dict[str, Any]]:
     logger.info("Starting structured information parsing...")
     parsed_result = None
     try:
-        # --- Get LLM Client ---
-        llm = get_llm_client() # Can raise RuntimeError
-
-        # --- Define the LCEL Chain INSIDE the function ---
+        llm = get_llm_client()
         chain = prompt | llm | parser
         logger.debug("LCEL chain (prompt | llm | parser) constructed.")
-
-        # --- Invoke the chain with specific error handling ---
         logger.info("Invoking information parsing chain...")
         try:
             parsed_result = chain.invoke({"extracted_text": raw_text})
             logger.info("Chain invocation successful.")
-
-        # --- Specific OpenAI API Error Handling ---
         except AuthenticationError as e:
             logger.critical(f"OpenAI API Authentication Error during info parsing: {e}", exc_info=True)
             raise RuntimeError("API Authentication Failed during info parsing") from e
@@ -109,42 +106,35 @@ def parse_extracted_info(raw_text: str) -> Optional[Dict[str, Any]]:
              raise RuntimeError("API Permission Denied during info parsing") from e
         except RateLimitError as e:
             logger.error(f"OpenAI API Rate Limit Exceeded during info parsing: {e}", exc_info=True)
-            return None # Fail for this page, maybe retry later
+            return None
         except APITimeoutError as e:
              logger.error(f"OpenAI API Timeout Error during info parsing: {e}", exc_info=True)
-             return None # Fail for this page, maybe retry later
+             return None
         except APIConnectionError as e:
              logger.error(f"OpenAI API Connection Error during info parsing: {e}", exc_info=True)
-             return None # Fail for this page, maybe retry later
+             return None
         except BadRequestError as e:
              logger.error(f"OpenAI API Bad Request Error during info parsing: {e}", exc_info=True)
-             return None # Input/prompt likely invalid
-        except APIError as e: # Catch other OpenAI API errors (like 5xx)
+             return None
+        except APIError as e:
              logger.error(f"OpenAI API Error during info parsing: {e}", exc_info=True)
-             return None # Fail for this page, maybe retry later
-        # --- Langchain Specific Error Handling ---
+             return None
         except OutputParserException as ope:
-            # Error parsing the LLM's response (e.g., not valid JSON)
             logger.error(f"Failed to parse LLM response as JSON: {ope}", exc_info=True)
             return None
-        # --- End Specific Error Handling ---
 
-        # --- Validate result type if no exception occurred ---
         if isinstance(parsed_result, dict):
             logger.debug(f"Parsed Info Dictionary: {parsed_result}")
             return parsed_result
         else:
-            # This might happen if the LLM call succeeded but the parser returned an unexpected type
             logger.error(f"Chain returned unexpected type after invoke. Expected dict, got: {type(parsed_result)}. Result: {parsed_result}")
             return None
 
     except RuntimeError as rte:
-         # Catch client initialization errors
          logger.critical(f"LLM client runtime error preventing info parsing: {rte}", exc_info=True)
-         raise # Re-raise critical runtime errors
+         raise
     except Exception as e:
-        # Catch any other unexpected errors during setup or invocation
         logger.error(f"Unexpected error during structured information parsing setup/call: {e}", exc_info=True)
         return None
 
-# No __main__ block needed as testing is done via pytest
+# No __main__ block
