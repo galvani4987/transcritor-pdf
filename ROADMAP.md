@@ -25,7 +25,7 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 * [x] **Implementar função em `pdf_splitter.py` para dividir um arquivo PDF de entrada em páginas individuais (salvando como imagens temporárias WebP em disco).**
 * [x] Criar `src/input_handler/loader.py`.
 * [x] Implementar função em `loader.py` para carregar uma imagem de página (a partir do caminho do arquivo temporário). Validar o input.
-* [ ] Implementar tratamento de erros para caminhos inválidos, PDFs corrompidos ou tipos de arquivo não suportados.
+* [ ] Implementar tratamento de erros para caminhos inválidos, PDFs corrompidos ou tipos de arquivo não suportados. (Refinamento inicial feito).
 * [x] Modificar o fluxo principal em `src/main.py` para:
     * Receber o caminho do PDF.
     * Chamar o `pdf_splitter` para obter os caminhos das páginas.
@@ -94,7 +94,7 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 * [x] Adicionar logging adequado.
 * [x] Criar a estrutura da pasta `tests/`.
 * [x] Escrever testes unitários e de integração (incluindo vetorização). (Testes unitários com mocks para módulos principais concluídos).
-* [x] Refatorar código (clareza, eficiência, manutenibilidade). (Refatorado vector_store_handler para asyncpg).
+* [x] Refatorar código (clareza, eficiência, manutenibilidade). (Refatorado vector_store_handler para asyncpg, main loop para helper).
 * [x] Adicionar/Melhorar docstrings. (Módulos principais concluídos).
 * [x] Atualizar `README.md` com instruções de uso completas.
 * [ ] Realizar commit da versão final do CLI.
