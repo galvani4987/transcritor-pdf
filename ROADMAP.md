@@ -97,7 +97,7 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 * [x] Refatorar código (clareza, eficiência, manutenibilidade). (Refatorado vector_store_handler para asyncpg, main loop para helper).
 * [x] Adicionar/Melhorar docstrings. (Módulos principais concluídos).
 * [x] Atualizar `README.md` com instruções de uso completas.
-* [ ] Realizar commit da versão final do CLI.
+* [x] Realizar commit da versão final do CLI.
 
 **Fase 7: Futuro - Integração com `modular-dashboard`**
 
