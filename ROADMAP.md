@@ -25,7 +25,7 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 * [x] **Implementar função em `pdf_splitter.py` para dividir um arquivo PDF de entrada em páginas individuais (salvando como imagens temporárias WebP em disco).**
 * [x] Criar `src/input_handler/loader.py`.
 * [x] Implementar função em `loader.py` para carregar uma imagem de página (a partir do caminho do arquivo temporário). Validar o input.
-* [ ] Implementar tratamento de erros para caminhos inválidos, PDFs corrompidos ou tipos de arquivo não suportados. (Refinamento inicial feito).
+* [x] Implementar tratamento de erros para caminhos inválidos, PDFs corrompidos ou tipos de arquivo não suportados. (Validação inicial e por página implementadas).
 * [x] Modificar o fluxo principal em `src/main.py` para:
     * Receber o caminho do PDF.
     * Chamar o `pdf_splitter` para obter os caminhos das páginas.
@@ -43,7 +43,7 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 * [x] Implementar **Filtro de Mediana** (Redução de Ruído) em `image_processor.py` usando Scikit-image.
 * [x] Implementar **CLAHE** (Melhora de Contraste) em `image_processor.py` usando Scikit-image.
 * [x] Implementar **Binarização Sauvola** em `image_processor.py` usando Scikit-image.
-* [ ] Implementar [Opcional] **Recorte de Bordas** em `image_processor.py`.
+* [x] Implementar [Opcional] **Recorte de Bordas** em `image_processor.py`.
 * [x] Integrar a chamada à função `preprocess_image` no loop de página em `src/main.py`.
 * [x] Realizar commit das funcionalidades de pré-processamento.
 * [ ] _(Pendente)_ Pesquisar como usar `Docling` (ou similar) para análise de layout **em cada imagem de página** (detectar blocos de texto, áreas de assinatura).
@@ -60,7 +60,7 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 * [x] Criar `src/extractor/info_parser.py`.
 * [x] Desenvolver prompt/cadeia Langchain para analisar o texto extraído **da página** e identificar/extrair informações chave (JSON Output).
 * [x] Refinar prompts para precisão e custo **por página** (tanto para text_extractor quanto info_parser). (Refinamento inicial concluído).
-* [x] Implementar tratamento de erros para chamadas à API LLM (mais robusto).
+* [x] Implementar tratamento de erros para chamadas à API LLM (mais robusto, com retentativas).
 * [x] Integrar as etapas de extração (text_extractor) no loop de página em `src/main.py`.
 * [x] Integrar a chamada ao `info_parser` no loop de página em `src/main.py`.
 * [x] Realizar commit das funcionalidades de extração por página.
