@@ -1,25 +1,30 @@
 # -*- coding: utf-8 -*-
 """Extracts text content from preprocessed page images using a multimodal LLM.
 
-Includes specific error handling for OpenAI API exceptions and a refined prompt.
+Includes specific error handling and retry logic using tenacity.
 """
 
 import base64
 import io
 import sys
 import logging
-import os # Added os import for example usage
-from typing import Optional
+from typing import Optional, Any, List # <<< CORRECTION: Added List import
 from PIL import Image
+# Import tenacity for retry logic
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type, before_sleep_log
 # Import the function to get the initialized LLM client
 from .llm_client import get_llm_client
 # Import necessary Langchain components
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, BaseMessage # Added BaseMessage
 # Import specific OpenAI exceptions for handling
 try:
     from openai import (
         APIError, APIConnectionError, APITimeoutError, AuthenticationError,
         BadRequestError, PermissionDeniedError, RateLimitError
+    )
+    # Define which errors should trigger a retry
+    RETRYABLE_API_ERRORS = (
+        RateLimitError, APITimeoutError, APIError, APIConnectionError
     )
     OPENAI_ERRORS_AVAILABLE = True
 except ImportError:
@@ -30,7 +35,8 @@ except ImportError:
     class AuthenticationError(APIError): pass
     class BadRequestError(APIError): pass
     class PermissionDeniedError(APIError): pass
-    class RateLimitError(APIError): pass
+    class RateLimitError(Exception): pass
+    RETRYABLE_API_ERRORS = (Exception,)
     logging.warning("openai library not found or exceptions changed. Specific API error handling may be limited.")
 
 # Get a logger instance for this module
@@ -42,8 +48,7 @@ def encode_image_to_base64(image: Image.Image, format: str = "WEBP") -> str:
     try:
         buffered = io.BytesIO()
         save_kwargs = {"format": format}
-        if format.upper() == "WEBP":
-            save_kwargs["lossless"] = True
+        if format.upper() == "WEBP": save_kwargs["lossless"] = True
         image.save(buffered, **save_kwargs)
         img_bytes = buffered.getvalue()
         base64_str = base64.b64encode(img_bytes).decode('utf-8')
@@ -53,8 +58,23 @@ def encode_image_to_base64(image: Image.Image, format: str = "WEBP") -> str:
         logger.error(f"Error encoding image to base64: {e}", exc_info=True)
         raise
 
+# --- Helper function with retry logic for the LLM call ---
+@retry(
+    wait=wait_exponential(multiplier=1, min=1, max=10),
+    stop=stop_after_attempt(3),
+    retry=retry_if_exception_type(RETRYABLE_API_ERRORS),
+    before_sleep=before_sleep_log(logger, logging.WARNING)
+)
+def _invoke_llm_with_retry(llm_client: Any, messages: List[BaseMessage]) -> Any: # List is used here
+    """
+    Internal helper to invoke the LLM client with retry logic for specific errors.
+    """
+    logger.debug("Invoking LLM...")
+    return llm_client.invoke(messages)
+
+
 def extract_text_from_image(image: Image.Image) -> Optional[str]:
-    """Extracts text content from an image using a multimodal LLM with specific error handling.
+    """Extracts text content from an image using a multimodal LLM with retry logic.
 
     Args:
         image: The preprocessed PIL Image object of a document page.
@@ -64,12 +84,11 @@ def extract_text_from_image(image: Image.Image) -> Optional[str]:
 
     Raises:
         TypeError: If the input `image` is not a PIL Image object.
-        RuntimeError: If the LLM client cannot be initialized.
+        RuntimeError: If the LLM client cannot be initialized or critical API errors occur.
     """
     if not isinstance(image, Image.Image):
         msg = "Invalid input type for text extraction: Expected PIL Image."
-        logger.error(msg)
-        raise TypeError(msg)
+        logger.error(msg); raise TypeError(msg)
 
     logger.info(f"Starting text extraction for image (mode: {image.mode}, size: {image.size})...")
 
@@ -77,9 +96,8 @@ def extract_text_from_image(image: Image.Image) -> Optional[str]:
         llm = get_llm_client()
         logger.debug("Encoding image to base64 data URI for LLM...")
         base64_data_uri = encode_image_to_base64(image, format="WEBP")
-        logger.debug(f"Image successfully encoded (URI length: {len(base64_data_uri)}).")
+        logger.debug(f"Image successfully encoded.")
 
-        # --- Refined Prompt ---
         prompt_text = (
             "This is an image of a potentially handwritten medical document page, likely in Portuguese. "
             "The image may have been preprocessed to enhance text visibility. "
@@ -87,43 +105,37 @@ def extract_text_from_image(image: Image.Image) -> Optional[str]:
             "Preserve the original structure (paragraphs, line breaks) as accurately as possible. "
             "Output only the extracted text, without any additional commentary or formatting."
         )
-        # --- End Refined Prompt ---
-
         message = HumanMessage(
             content=[
-                {"type": "text", "text": prompt_text}, # Use the refined prompt text
+                {"type": "text", "text": prompt_text},
                 {"type": "image_url", "image_url": {"url": base64_data_uri}},
             ]
         )
 
-        logger.info("Sending image and refined prompt to LLM for text extraction...")
-        response = None
-        try:
-            response = llm.invoke([message])
-        except AuthenticationError as e:
-            logger.critical(f"OpenAI API Authentication Error: Invalid API Key? {e}", exc_info=True)
-            raise RuntimeError("API Authentication Failed") from e
-        except PermissionDeniedError as e:
-             logger.critical(f"OpenAI API Permission Error: Key lacks permission for model/resource? {e}", exc_info=True)
-             raise RuntimeError("API Permission Denied") from e
-        except RateLimitError as e: logger.error(f"OpenAI API Rate Limit Exceeded: {e}", exc_info=True); return None
-        except APITimeoutError as e: logger.error(f"OpenAI API Timeout Error: {e}", exc_info=True); return None
-        except APIConnectionError as e: logger.error(f"OpenAI API Connection Error: Network issue? {e}", exc_info=True); return None
-        except BadRequestError as e: logger.error(f"OpenAI API Bad Request Error: {e}", exc_info=True); return None
-        except APIError as e: logger.error(f"OpenAI API Error (Server issue?): {e}", exc_info=True); return None
+        logger.info("Sending image and prompt to LLM for text extraction (with retries)...")
+        response = _invoke_llm_with_retry(llm, [message]) # Call helper
 
         if hasattr(response, 'content') and isinstance(response.content, str):
             extracted_text = response.content
-            logger.info("LLM text extraction successful.")
+            logger.info("LLM text extraction successful (possibly after retries).")
             logger.debug(f"Extracted Text Snippet: {extracted_text[:100]}...")
             return extracted_text
         else:
             logger.error(f"Unexpected LLM response format or type after successful call. Response: {response}")
             return None
 
-    except TypeError as e: logger.error(f"Type error during text extraction setup: {e}", exc_info=True); raise
-    except RuntimeError as e: logger.error(f"LLM client runtime error during text extraction: {e}", exc_info=True); raise
-    except Exception as e: logger.error(f"An unexpected error occurred during text extraction: {e}", exc_info=True); return None
+    except AuthenticationError as e:
+        logger.critical(f"OpenAI API Authentication Error: Invalid API Key? {e}", exc_info=True)
+        raise RuntimeError("API Authentication Failed") from e
+    except PermissionDeniedError as e:
+         logger.critical(f"OpenAI API Permission Error: Key lacks permission? {e}", exc_info=True)
+         raise RuntimeError("API Permission Denied") from e
+    except BadRequestError as e:
+         logger.error(f"OpenAI API Bad Request Error: {e}", exc_info=True)
+         return None
+    except Exception as e: # Catch errors from encoding, client init, or final retry failure
+        logger.error(f"Failed to extract text after retries or due to other error: {e}", exc_info=True)
+        return None
 
 # Example usage block (remains the same)
 if __name__ == "__main__":
