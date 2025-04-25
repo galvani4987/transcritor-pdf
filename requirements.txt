@@ -3,6 +3,7 @@
 
 # === Core ===
 python-dotenv   # Para carregar variáveis de ambiente do .env
+tenacity            # Para lógica de retentativa (ex: em chamadas de API)
 
 # === Langchain Core & LLM/Embedding Integration ===
 langchain           # Framework principal
