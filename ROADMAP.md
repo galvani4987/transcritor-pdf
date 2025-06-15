@@ -86,8 +86,8 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 ### Fase 7: Integração com `modular-dashboard` como Microsserviço API
 
 * ✅ Doc Research: Uvicorn (TASK-031)
-* [ ] **Atualizar Dependências da API:**
-    * [ ] Adicionar `fastapi` e `uvicorn[standard]` ao arquivo `requirements.txt`.
+* [x] **Atualizar Dependências da API:** (TASK-008)
+    * [x] Adicionar `fastapi` e `uvicorn[standard]` ao arquivo `requirements.txt`.
 * [ ] **Refatorar Ponto de Entrada (`src/main.py`):**
     * [ ] Remover a lógica de `argparse` e instanciar a aplicação FastAPI.
 * [ ] **Modularizar Lógica de Negócio:**
