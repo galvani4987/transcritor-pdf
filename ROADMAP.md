@@ -103,9 +103,9 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
     * [x] Usar o evento `@app.on_event("startup")` para executar `CREATE EXTENSION` e `CREATE TABLE`.
 * [x] **Escrever Testes da API:** (TASK-014)
     * [x] Implementar testes de integração para os endpoints (`/health`, `/process-pdf/`) usando o `TestClient` do FastAPI.
-* [ ] **Validar Conexão e Documentação:**
-    * [ ] Revisar `vector_store_handler.py` para conexão via variáveis de ambiente.
-    * [ ] Atualizar o `README.md` do projeto com a documentação da nova API.
+* [x] **Validar Conexão e Documentação:** ✅
+    * [x] Revisar `vector_store_handler.py` para conexão via variáveis de ambiente.
+    * [x] Atualizar o `README.md` do projeto com a documentação da nova API.
 
 ### Fase 8: Containerização e Orquestração
 
