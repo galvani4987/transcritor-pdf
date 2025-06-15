@@ -4,7 +4,7 @@ title: "F7: Validar Conexão e Documentação"
 epic: "Fase 7: Integração com `modular-dashboard` como Microsserviço API"
 status: backlog
 priority: medium
-dependencies: ["TASK-013", "TASK-011"] # Depends on DB schema and API endpoints
+dependencies: ["TASK-013", "TASK-011", "TASK-024"] # Depends on DB schema and API endpoints
 assignee: Jules
 ---
 

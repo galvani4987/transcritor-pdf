@@ -4,7 +4,7 @@ title: "F9: Implementar Fila de Tarefas Assíncronas"
 epic: "Fase 9: Otimização e Escalabilidade (Futuro)"
 status: backlog
 priority: medium
-dependencies: []
+dependencies: ["TASK-026"]
 assignee: Jules
 ---
 

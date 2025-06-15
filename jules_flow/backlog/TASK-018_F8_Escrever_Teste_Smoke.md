@@ -4,7 +4,7 @@ title: "F8: Escrever Teste de Smoke"
 epic: "Fase 8: Containerização e Orquestração"
 status: backlog
 priority: medium
-dependencies: ["TASK-017"]
+dependencies: ["TASK-017", "TASK-032"]
 assignee: Jules
 ---
 

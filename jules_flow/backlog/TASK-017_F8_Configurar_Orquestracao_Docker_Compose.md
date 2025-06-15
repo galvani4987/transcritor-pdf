@@ -4,7 +4,7 @@ title: "F8: Configurar orquestração Docker Compose"
 epic: "Fase 8: Containerização e Orquestração"
 status: backlog
 priority: medium
-dependencies: []
+dependencies: ["TASK-032"]
 assignee: Jules
 ---
 

@@ -4,7 +4,7 @@ title: "F7: Implementar Gerenciamento de Schema do Banco de Dados"
 epic: "Fase 7: Integração com `modular-dashboard` como Microsserviço API"
 status: backlog
 priority: medium
-dependencies: []
+dependencies: ["TASK-024", "TASK-030"]
 assignee: Jules
 ---
 

@@ -4,7 +4,7 @@ title: "F2: Pesquisar e implementar análise de layout com Docling ou similar"
 epic: "Fase 2: Pré-processamento por Página"
 status: backlog
 priority: medium
-dependencies: []
+dependencies: ["TASK-023"]
 assignee: Jules
 ---
 

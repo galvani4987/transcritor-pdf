@@ -4,7 +4,7 @@ title: "F7: Atualizar Dependências da API"
 epic: "Fase 7: Integração com `modular-dashboard` como Microsserviço API"
 status: backlog
 priority: medium
-dependencies: []
+dependencies: ["TASK-031"]
 assignee: Jules
 ---
 

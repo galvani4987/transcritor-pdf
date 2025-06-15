@@ -1,0 +1,1125 @@
+#[1]next [2]alternate [3]alternate [4]alternate [5]alternate
+   [6]alternate [7]alternate [8]alternate [9]alternate [10]alternate
+   [11]alternate [12]alternate [13]alternate [14]alternate [15]alternate
+   [16]alternate [17]alternate [18]alternate [19]alternate [20]alternate
+   [21]alternate [22]alternate [23]alternate [24]alternate [25]alternate
+   [26]alternate
+
+   [ ] [ ]
+
+   [27]Skip to content
+
+   [28]Follow @fastapi on Twitter to stay updated
+   [29]Follow FastAPI on LinkedIn to stay updated
+   [30]Subscribe to the FastAPI and friends newsletter 🎉
+   [31]sponsor [blockbee-banner.png]
+   [32]sponsor [platform-sh-banner.png]
+   [33]sponsor [scalar-banner.svg]
+   [34]sponsor [propelauth-banner.png]
+   [35]sponsor [zuplo-banner.png]
+   [36]sponsor [liblab-banner.png]
+   [37]sponsor [render-banner.svg]
+   [38]sponsor [coderabbit-banner.png]
+   [39]sponsor [subtotal-banner.svg]
+
+   [40]logo
+
+   FastAPI
+   FastAPI
+
+   (*) ( ) ( )
+
+   (BUTTON)
+     * [41]en - English
+     * [42]az - azərbaycan dili
+     * [43]bn - বাংলা
+     * [44]de - Deutsch
+     * [45]es - español
+     * [46]fa - فارسی
+     * [47]fr - français
+     * [48]he - עברית
+     * [49]hu - magyar
+     * [50]id - Bahasa Indonesia
+     * [51]it - italiano
+     * [52]ja - 日本語
+     * [53]ko - 한국어
+     * [54]nl - Nederlands
+     * [55]pl - Polski
+     * [56]pt - português
+     * [57]ru - русский язык
+     * [58]tr - Türkçe
+     * [59]uk - українська мова
+     * [60]ur - اردو
+     * [61]vi - Tiếng Việt
+     * [62]yo - Yorùbá
+     * [63]zh - 简体中文
+     * [64]zh-hant - 繁體中文
+     * [65]😉
+
+   ____________________
+
+   (BUTTON)
+   Initializing search
+
+   [66]
+   fastapi/fastapi
+
+     * [67]FastAPI
+     * [68]Features
+     * [69]Learn
+     * [70]Reference
+     * [71]FastAPI People
+     * [72]Resources
+     * [73]About
+     * [74]Release Notes
+
+   [75]logo FastAPI
+   [76]
+   fastapi/fastapi
+     * [ ] FastAPI [77]FastAPI
+   Table of contents
+          + [78]Sponsors
+          + [79]Opinions
+          + [80]Typer, the FastAPI of CLIs
+          + [81]Requirements
+          + [82]Installation
+          + [83]Example
+               o [84]Create it
+               o [85]Run it
+               o [86]Check it
+               o [87]Interactive API docs
+               o [88]Alternative API docs
+          + [89]Example upgrade
+               o [90]Interactive API docs upgrade
+               o [91]Alternative API docs upgrade
+               o [92]Recap
+          + [93]Performance
+          + [94]Dependencies
+               o [95]standard Dependencies
+               o [96]Without standard Dependencies
+               o [97]Additional Optional Dependencies
+          + [98]License
+     * [99]Features
+     * [ ]
+       [100]Learn
+   Learn
+          + [101]Python Types Intro
+          + [102]Concurrency and async / await
+          + [103]Environment Variables
+          + [104]Virtual Environments
+          + [ ]
+            [105]Tutorial - User Guide
+        Tutorial - User Guide
+               o [106]First Steps
+               o [107]Path Parameters
+               o [108]Query Parameters
+               o [109]Request Body
+               o [110]Query Parameters and String Validations
+               o [111]Path Parameters and Numeric Validations
+               o [112]Query Parameter Models
+               o [113]Body - Multiple Parameters
+               o [114]Body - Fields
+               o [115]Body - Nested Models
+               o [116]Declare Request Example Data
+               o [117]Extra Data Types
+               o [118]Cookie Parameters
+               o [119]Header Parameters
+               o [120]Cookie Parameter Models
+               o [121]Header Parameter Models
+               o [122]Response Model - Return Type
+               o [123]Extra Models
+               o [124]Response Status Code
+               o [125]Form Data
+               o [126]Form Models
+               o [127]Request Files
+               o [128]Request Forms and Files
+               o [129]Handling Errors
+               o [130]Path Operation Configuration
+               o [131]JSON Compatible Encoder
+               o [132]Body - Updates
+               o [ ]
+                 [133]Dependencies
+             Dependencies
+                    # [134]Classes as Dependencies
+                    # [135]Sub-dependencies
+                    # [136]Dependencies in path operation decorators
+                    # [137]Global Dependencies
+                    # [138]Dependencies with yield
+               o [ ]
+                 [139]Security
+             Security
+                    # [140]Security - First Steps
+                    # [141]Get Current User
+                    # [142]Simple OAuth2 with Password and Bearer
+                    # [143]OAuth2 with Password (and hashing), Bearer with
+                      JWT tokens
+               o [144]Middleware
+               o [145]CORS (Cross-Origin Resource Sharing)
+               o [146]SQL (Relational) Databases
+               o [147]Bigger Applications - Multiple Files
+               o [148]Background Tasks
+               o [149]Metadata and Docs URLs
+               o [150]Static Files
+               o [151]Testing
+               o [152]Debugging
+          + [ ]
+            [153]Advanced User Guide
+        Advanced User Guide
+               o [154]Path Operation Advanced Configuration
+               o [155]Additional Status Codes
+               o [156]Return a Response Directly
+               o [157]Custom Response - HTML, Stream, File, others
+               o [158]Additional Responses in OpenAPI
+               o [159]Response Cookies
+               o [160]Response Headers
+               o [161]Response - Change Status Code
+               o [162]Advanced Dependencies
+               o [ ]
+                 [163]Advanced Security
+             Advanced Security
+                    # [164]OAuth2 scopes
+                    # [165]HTTP Basic Auth
+               o [166]Using the Request Directly
+               o [167]Using Dataclasses
+               o [168]Advanced Middleware
+               o [169]Sub Applications - Mounts
+               o [170]Behind a Proxy
+               o [171]Templates
+               o [172]WebSockets
+               o [173]Lifespan Events
+               o [174]Testing WebSockets
+               o [175]Testing Events: startup - shutdown
+               o [176]Testing Dependencies with Overrides
+               o [177]Async Tests
+               o [178]Settings and Environment Variables
+               o [179]OpenAPI Callbacks
+               o [180]OpenAPI Webhooks
+               o [181]Including WSGI - Flask, Django, others
+               o [182]Generate Clients
+          + [183]FastAPI CLI
+          + [ ]
+            [184]Deployment
+        Deployment
+               o [185]About FastAPI versions
+               o [186]About HTTPS
+               o [187]Run a Server Manually
+               o [188]Deployments Concepts
+               o [189]Deploy FastAPI on Cloud Providers
+               o [190]Server Workers - Uvicorn with Workers
+               o [191]FastAPI in Containers - Docker
+          + [ ]
+            [192]How To - Recipes
+        How To - Recipes
+               o [193]General - How To - Recipes
+               o [194]GraphQL
+               o [195]Custom Request and APIRoute class
+               o [196]Conditional OpenAPI
+               o [197]Extending OpenAPI
+               o [198]Separate OpenAPI Schemas for Input and Output or Not
+               o [199]Custom Docs UI Static Assets (Self-Hosting)
+               o [200]Configure Swagger UI
+               o [201]Testing a Database
+     * [ ]
+       [202]Reference
+   Reference
+          + [203]FastAPI class
+          + [204]Request Parameters
+          + [205]Status Codes
+          + [206]UploadFile class
+          + [207]Exceptions - HTTPException and WebSocketException
+          + [208]Dependencies - Depends() and Security()
+          + [209]APIRouter class
+          + [210]Background Tasks - BackgroundTasks
+          + [211]Request class
+          + [212]WebSockets
+          + [213]HTTPConnection class
+          + [214]Response class
+          + [215]Custom Response Classes - File, HTML, Redirect,
+            Streaming, etc.
+          + [216]Middleware
+          + [ ]
+            [217]OpenAPI
+        OpenAPI
+               o [218]OpenAPI docs
+               o [219]OpenAPI models
+          + [220]Security Tools
+          + [221]Encoders - jsonable_encoder
+          + [222]Static Files - StaticFiles
+          + [223]Templating - Jinja2Templates
+          + [224]Test Client - TestClient
+     * [225]FastAPI People
+     * [ ]
+       [226]Resources
+   Resources
+          + [227]Help FastAPI - Get Help
+          + [228]Development - Contributing
+          + [229]Full Stack FastAPI Template
+          + [230]External Links and Articles
+          + [231]FastAPI and friends newsletter
+          + [232]Repository Management Tasks
+     * [ ]
+       [233]About
+   About
+          + [234]Alternatives, Inspiration and Comparisons
+          + [235]History, Design and Future
+          + [236]Benchmarks
+          + [237]Repository Management
+     * [238]Release Notes
+
+   Table of contents
+     * [239]Sponsors
+     * [240]Opinions
+     * [241]Typer, the FastAPI of CLIs
+     * [242]Requirements
+     * [243]Installation
+     * [244]Example
+          + [245]Create it
+          + [246]Run it
+          + [247]Check it
+          + [248]Interactive API docs
+          + [249]Alternative API docs
+     * [250]Example upgrade
+          + [251]Interactive API docs upgrade
+          + [252]Alternative API docs upgrade
+          + [253]Recap
+     * [254]Performance
+     * [255]Dependencies
+          + [256]standard Dependencies
+          + [257]Without standard Dependencies
+          + [258]Additional Optional Dependencies
+     * [259]License
+
+FastAPI[260]¶
+
+                                [261]FastAPI
+
+   FastAPI framework, high performance, easy to learn, fast to code, ready
+                               for production
+
+     [262]Test [263]Coverage [264]Package version [265]Supported Python
+                                  versions
+     __________________________________________________________________
+
+   Documentation: [266]https://fastapi.tiangolo.com
+
+   Source Code: [267]https://github.com/fastapi/fastapi
+     __________________________________________________________________
+
+   FastAPI is a modern, fast (high-performance), web framework for
+   building APIs with Python based on standard Python type hints.
+
+   The key features are:
+     * Fast: Very high performance, on par with NodeJS and Go (thanks to
+       Starlette and Pydantic). [268]One of the fastest Python frameworks
+       available.
+     * Fast to code: Increase the speed to develop features by about 200%
+       to 300%. *
+     * Fewer bugs: Reduce about 40% of human (developer) induced errors. *
+     * Intuitive: Great editor support. Completion everywhere. Less time
+       debugging.
+     * Easy: Designed to be easy to use and learn. Less time reading docs.
+     * Short: Minimize code duplication. Multiple features from each
+       parameter declaration. Fewer bugs.
+     * Robust: Get production-ready code. With automatic interactive
+       documentation.
+     * Standards-based: Based on (and fully compatible with) the open
+       standards for APIs: [269]OpenAPI (previously known as Swagger) and
+       [270]JSON Schema.
+
+   * estimation based on tests on an internal development team, building
+   production applications.
+
+Sponsors[271]¶
+
+   [272][blockbee.png] [273][platform-sh.png] [274][scalar.svg]
+   [275][propelauth.png] [276][zuplo.png] [277][liblab.png]
+   [278][render.svg] [279][coderabbit.png] [280][subtotal.svg]
+   [281][databento.svg] [282][speakeasy.png] [283][svix.svg]
+   [284][stainless.png] [285][permit.png] [286][interviewpal.png]
+   [287][dribia.png]
+
+   [288]Other sponsors
+
+Opinions[289]¶
+
+   "[...] I'm using FastAPI a ton these days. [...] I'm actually planning
+   to use it for all of my team's ML services at Microsoft. Some of them
+   are getting integrated into the core Windows product and some Office
+   products."
+   Kabir Khan - Microsoft [290](ref)
+     __________________________________________________________________
+
+   "We adopted the FastAPI library to spawn a REST server that can be
+   queried to obtain predictions. [for Ludwig]"
+   Piero Molino, Yaroslav Dudin, and Sai Sumanth Miryala - Uber [291](ref)
+     __________________________________________________________________
+
+   "Netflix is pleased to announce the open-source release of our crisis
+   management orchestration framework: Dispatch! [built with FastAPI]"
+   Kevin Glisson, Marc Vilanova, Forest Monsen - Netflix [292](ref)
+     __________________________________________________________________
+
+   "I’m over the moon excited about FastAPI. It’s so fun!"
+   Brian Okken - [293]Python Bytes podcast host [294](ref)
+     __________________________________________________________________
+
+   "Honestly, what you've built looks super solid and polished. In many
+   ways, it's what I wanted Hug to be - it's really inspiring to see
+   someone build that."
+   Timothy Crosley - [295]Hug creator [296](ref)
+     __________________________________________________________________
+
+   "If you're looking to learn one modern framework for building REST
+   APIs, check out FastAPI [...] It's fast, easy to use and easy to learn
+   [...]"
+
+   "We've switched over to FastAPI for our APIs [...] I think you'll like
+   it [...]"
+   Ines Montani - Matthew Honnibal - [297]Explosion AI founders -
+   [298]spaCy creators [299](ref) - [300](ref)
+     __________________________________________________________________
+
+   "If anyone is looking to build a production Python API, I would highly
+   recommend FastAPI. It is beautifully designed, simple to use and highly
+   scalable, it has become a key component in our API first development
+   strategy and is driving many automations and services such as our
+   Virtual TAC Engineer."
+   Deon Pillsbury - Cisco [301](ref)
+     __________________________________________________________________
+
+Typer, the FastAPI of CLIs[302]¶
+
+   [303][logo-margin-vector.svg]
+
+   If you are building a CLI app to be used in the terminal instead of a
+   web API, check out [304]Typer.
+
+   Typer is FastAPI's little sibling. And it's intended to be the FastAPI
+   of CLIs. ⌨️ 🚀
+
+Requirements[305]¶
+
+   FastAPI stands on the shoulders of giants:
+     * [306]Starlette for the web parts.
+     * [307]Pydantic for the data parts.
+
+Installation[308]¶
+
+   Create and activate a [309]virtual environment and then install
+   FastAPI:
+$ pip install "fastapi[standard]"
+
+---> 100%
+
+   Note: Make sure you put "fastapi[standard]" in quotes to ensure it
+   works in all terminals.
+
+Example[310]¶
+
+Create it[311]¶
+
+   Create a file main.py with:
+from typing import Union
+
+from fastapi import FastAPI
+
+app = FastAPI()
+
+
+@app.get("/")
+def read_root():
+    return {"Hello": "World"}
+
+
+@app.get("/items/{item_id}")
+def read_item(item_id: int, q: Union[str, None] = None):
+    return {"item_id": item_id, "q": q}
+
+   Or use async def...
+
+   If your code uses async / await, use async def:
+from typing import Union
+
+from fastapi import FastAPI
+
+app = FastAPI()
+
+
+@app.get("/")
+async def read_root():
+    return {"Hello": "World"}
+
+
+@app.get("/items/{item_id}")
+async def read_item(item_id: int, q: Union[str, None] = None):
+    return {"item_id": item_id, "q": q}
+
+   Note:
+
+   If you don't know, check the "In a hurry?" section about [312]async and
+   await in the docs.
+
+Run it[313]¶
+
+   Run the server with:
+$ fastapi dev main.py
+
+ ╭────────── FastAPI CLI - Development mode ───────────╮
+ │                                                     │
+ │  Serving at: http://127.0.0.1:8000                  │
+ │                                                     │
+ │  API docs: http://127.0.0.1:8000/docs               │
+ │                                                     │
+ │  Running in development mode, for production use:   │
+ │                                                     │
+ │  fastapi run                                        │
+ │                                                     │
+ ╰─────────────────────────────────────────────────────╯
+
+INFO:     Will watch for changes in these directories: ['/home/user/code/awesome
+app']
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [2248755] using WatchFiles
+INFO:     Started server process [2248757]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+
+   About the command fastapi dev main.py...
+
+   The command fastapi dev reads your main.py file, detects the FastAPI
+   app in it, and starts a server using [314]Uvicorn.
+
+   By default, fastapi dev will start with auto-reload enabled for local
+   development.
+
+   You can read more about it in the [315]FastAPI CLI docs.
+
+Check it[316]¶
+
+   Open your browser at [317]http://127.0.0.1:8000/items/5?q=somequery.
+
+   You will see the JSON response as:
+{"item_id": 5, "q": "somequery"}
+
+   You already created an API that:
+     * Receives HTTP requests in the paths / and /items/{item_id}.
+     * Both paths take GET operations (also known as HTTP methods).
+     * The path /items/{item_id} has a path parameter item_id that should
+       be an int.
+     * The path /items/{item_id} has an optional str query parameter q.
+
+Interactive API docs[318]¶
+
+   Now go to [319]http://127.0.0.1:8000/docs.
+
+   You will see the automatic interactive API documentation (provided by
+   [320]Swagger UI):
+
+   Swagger UI
+
+Alternative API docs[321]¶
+
+   And now, go to [322]http://127.0.0.1:8000/redoc.
+
+   You will see the alternative automatic documentation (provided by
+   [323]ReDoc):
+
+   ReDoc
+
+Example upgrade[324]¶
+
+   Now modify the file main.py to receive a body from a PUT request.
+
+   Declare the body using standard Python types, thanks to Pydantic.
+from typing import Union
+
+from fastapi import FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+
+
+class Item(BaseModel):
+    name: str
+    price: float
+    is_offer: Union[bool, None] = None
+
+
+@app.get("/")
+def read_root():
+    return {"Hello": "World"}
+
+
+@app.get("/items/{item_id}")
+def read_item(item_id: int, q: Union[str, None] = None):
+    return {"item_id": item_id, "q": q}
+
+
+@app.put("/items/{item_id}")
+def update_item(item_id: int, item: Item):
+    return {"item_name": item.name, "item_id": item_id}
+
+   The fastapi dev server should reload automatically.
+
+Interactive API docs upgrade[325]¶
+
+   Now go to [326]http://127.0.0.1:8000/docs.
+     * The interactive API documentation will be automatically updated,
+       including the new body:
+
+   Swagger UI
+     * Click on the button "Try it out", it allows you to fill the
+       parameters and directly interact with the API:
+
+   Swagger UI interaction
+     * Then click on the "Execute" button, the user interface will
+       communicate with your API, send the parameters, get the results and
+       show them on the screen:
+
+   Swagger UI interaction
+
+Alternative API docs upgrade[327]¶
+
+   And now, go to [328]http://127.0.0.1:8000/redoc.
+     * The alternative documentation will also reflect the new query
+       parameter and body:
+
+   ReDoc
+
+Recap[329]¶
+
+   In summary, you declare once the types of parameters, body, etc. as
+   function parameters.
+
+   You do that with standard modern Python types.
+
+   You don't have to learn a new syntax, the methods or classes of a
+   specific library, etc.
+
+   Just standard Python.
+
+   For example, for an int:
+item_id: int
+
+   or for a more complex Item model:
+item: Item
+
+   ...and with that single declaration you get:
+     * Editor support, including:
+          + Completion.
+          + Type checks.
+     * Validation of data:
+          + Automatic and clear errors when the data is invalid.
+          + Validation even for deeply nested JSON objects.
+     * Conversion of input data: coming from the network to Python data
+       and types. Reading from:
+          + JSON.
+          + Path parameters.
+          + Query parameters.
+          + Cookies.
+          + Headers.
+          + Forms.
+          + Files.
+     * Conversion of output data: converting from Python data and types to
+       network data (as JSON):
+          + Convert Python types (str, int, float, bool, list, etc).
+          + datetime objects.
+          + UUID objects.
+          + Database models.
+          + ...and many more.
+     * Automatic interactive API documentation, including 2 alternative
+       user interfaces:
+          + Swagger UI.
+          + ReDoc.
+     __________________________________________________________________
+
+   Coming back to the previous code example, FastAPI will:
+     * Validate that there is an item_id in the path for GET and PUT
+       requests.
+     * Validate that the item_id is of type int for GET and PUT requests.
+          + If it is not, the client will see a useful, clear error.
+     * Check if there is an optional query parameter named q (as in
+       http://127.0.0.1:8000/items/foo?q=somequery) for GET requests.
+          + As the q parameter is declared with = None, it is optional.
+          + Without the None it would be required (as is the body in the
+            case with PUT).
+     * For PUT requests to /items/{item_id}, read the body as JSON:
+          + Check that it has a required attribute name that should be a
+            str.
+          + Check that it has a required attribute price that has to be a
+            float.
+          + Check that it has an optional attribute is_offer, that should
+            be a bool, if present.
+          + All this would also work for deeply nested JSON objects.
+     * Convert from and to JSON automatically.
+     * Document everything with OpenAPI, that can be used by:
+          + Interactive documentation systems.
+          + Automatic client code generation systems, for many languages.
+     * Provide 2 interactive documentation web interfaces directly.
+     __________________________________________________________________
+
+   We just scratched the surface, but you already get the idea of how it
+   all works.
+
+   Try changing the line with:
+    return {"item_name": item.name, "item_id": item_id}
+
+   ...from:
+        ... "item_name": item.name ...
+
+   ...to:
+        ... "item_price": item.price ...
+
+   ...and see how your editor will auto-complete the attributes and know
+   their types:
+
+   editor support
+
+   For a more complete example including more features, see the
+   [330]Tutorial - User Guide.
+
+   Spoiler alert: the tutorial - user guide includes:
+     * Declaration of parameters from other different places as: headers,
+       cookies, form fields and files.
+     * How to set validation constraints as maximum_length or regex.
+     * A very powerful and easy to use Dependency Injection system.
+     * Security and authentication, including support for OAuth2 with JWT
+       tokens and HTTP Basic auth.
+     * More advanced (but equally easy) techniques for declaring deeply
+       nested JSON models (thanks to Pydantic).
+     * GraphQL integration with [331]Strawberry and other libraries.
+     * Many extra features (thanks to Starlette) as:
+          + WebSockets
+          + extremely easy tests based on HTTPX and pytest
+          + CORS
+          + Cookie Sessions
+          + ...and more.
+
+Performance[332]¶
+
+   Independent TechEmpower benchmarks show FastAPI applications running
+   under Uvicorn as [333]one of the fastest Python frameworks available,
+   only below Starlette and Uvicorn themselves (used internally by
+   FastAPI). (*)
+
+   To understand more about it, see the section [334]Benchmarks.
+
+Dependencies[335]¶
+
+   FastAPI depends on Pydantic and Starlette.
+
+standard Dependencies[336]¶
+
+   When you install FastAPI with pip install "fastapi[standard]" it comes
+   with the standard group of optional dependencies:
+
+   Used by Pydantic:
+     * [337]email-validator - for email validation.
+
+   Used by Starlette:
+     * [338]httpx - Required if you want to use the TestClient.
+     * [339]jinja2 - Required if you want to use the default template
+       configuration.
+     * [340]python-multipart - Required if you want to support form
+       "parsing", with request.form().
+
+   Used by FastAPI / Starlette:
+     * [341]uvicorn - for the server that loads and serves your
+       application. This includes uvicorn[standard], which includes some
+       dependencies (e.g. uvloop) needed for high performance serving.
+     * fastapi-cli - to provide the fastapi command.
+
+Without standard Dependencies[342]¶
+
+   If you don't want to include the standard optional dependencies, you
+   can install with pip install fastapi instead of pip install
+   "fastapi[standard]".
+
+Additional Optional Dependencies[343]¶
+
+   There are some additional dependencies you might want to install.
+
+   Additional optional Pydantic dependencies:
+     * [344]pydantic-settings - for settings management.
+     * [345]pydantic-extra-types - for extra types to be used with
+       Pydantic.
+
+   Additional optional FastAPI dependencies:
+     * [346]orjson - Required if you want to use ORJSONResponse.
+     * [347]ujson - Required if you want to use UJSONResponse.
+
+License[348]¶
+
+   This project is licensed under the terms of the MIT license.
+   (BUTTON) Back to top
+
+   [349]
+   Next
+   Features
+   The FastAPI trademark is owned by [350]@tiangolo and is registered in
+   the US and across other regions
+   Made with [351]Material for MkDocs
+
+References
+
+   Visible links:
+   1. https://fastapi.tiangolo.com/features/
+   2. https://fastapi.tiangolo.com/
+   3. https://fastapi.tiangolo.com/az/
+   4. https://fastapi.tiangolo.com/bn/
+   5. https://fastapi.tiangolo.com/de/
+   6. https://fastapi.tiangolo.com/es/
+   7. https://fastapi.tiangolo.com/fa/
+   8. https://fastapi.tiangolo.com/fr/
+   9. https://fastapi.tiangolo.com/he/
+  10. https://fastapi.tiangolo.com/hu/
+  11. https://fastapi.tiangolo.com/id/
+  12. https://fastapi.tiangolo.com/it/
+  13. https://fastapi.tiangolo.com/ja/
+  14. https://fastapi.tiangolo.com/ko/
+  15. https://fastapi.tiangolo.com/nl/
+  16. https://fastapi.tiangolo.com/pl/
+  17. https://fastapi.tiangolo.com/pt/
+  18. https://fastapi.tiangolo.com/ru/
+  19. https://fastapi.tiangolo.com/tr/
+  20. https://fastapi.tiangolo.com/uk/
+  21. https://fastapi.tiangolo.com/ur/
+  22. https://fastapi.tiangolo.com/vi/
+  23. https://fastapi.tiangolo.com/yo/
+  24. https://fastapi.tiangolo.com/zh/
+  25. https://fastapi.tiangolo.com/zh-hant/
+  26. https://fastapi.tiangolo.com/em/
+  27. https://fastapi.tiangolo.com/#fastapi
+  28. https://twitter.com/fastapi
+  29. https://www.linkedin.com/company/fastapi
+  30. https://fastapi.tiangolo.com/newsletter/
+  31. https://blockbee.io/?ref=fastapi
+  32. https://platform.sh/try-it-now/?utm_source=fastapi-signup&utm_medium=banner&utm_campaign=FastAPI-signup-June-2023
+  33. https://github.com/scalar/scalar/?utm_source=fastapi&utm_medium=website&utm_campaign=top-banner
+  34. https://www.propelauth.com/?utm_source=fastapi&utm_campaign=1223&utm_medium=topbanner
+  35. https://zuplo.link/fastapi-web
+  36. https://liblab.com/?utm_source=fastapi
+  37. https://docs.render.com/deploy-fastapi?utm_source=deploydoc&utm_medium=referral&utm_campaign=fastapi
+  38. https://www.coderabbit.ai/?utm_source=fastapi&utm_medium=banner&utm_campaign=fastapi
+  39. https://subtotal.com/?utm_source=fastapi&utm_medium=sponsorship&utm_campaign=open-source
+  40. https://fastapi.tiangolo.com/
+  41. https://fastapi.tiangolo.com/
+  42. https://fastapi.tiangolo.com/az/
+  43. https://fastapi.tiangolo.com/bn/
+  44. https://fastapi.tiangolo.com/de/
+  45. https://fastapi.tiangolo.com/es/
+  46. https://fastapi.tiangolo.com/fa/
+  47. https://fastapi.tiangolo.com/fr/
+  48. https://fastapi.tiangolo.com/he/
+  49. https://fastapi.tiangolo.com/hu/
+  50. https://fastapi.tiangolo.com/id/
+  51. https://fastapi.tiangolo.com/it/
+  52. https://fastapi.tiangolo.com/ja/
+  53. https://fastapi.tiangolo.com/ko/
+  54. https://fastapi.tiangolo.com/nl/
+  55. https://fastapi.tiangolo.com/pl/
+  56. https://fastapi.tiangolo.com/pt/
+  57. https://fastapi.tiangolo.com/ru/
+  58. https://fastapi.tiangolo.com/tr/
+  59. https://fastapi.tiangolo.com/uk/
+  60. https://fastapi.tiangolo.com/ur/
+  61. https://fastapi.tiangolo.com/vi/
+  62. https://fastapi.tiangolo.com/yo/
+  63. https://fastapi.tiangolo.com/zh/
+  64. https://fastapi.tiangolo.com/zh-hant/
+  65. https://fastapi.tiangolo.com/em/
+  66. https://github.com/fastapi/fastapi
+  67. https://fastapi.tiangolo.com/
+  68. https://fastapi.tiangolo.com/features/
+  69. https://fastapi.tiangolo.com/learn/
+  70. https://fastapi.tiangolo.com/reference/
+  71. https://fastapi.tiangolo.com/fastapi-people/
+  72. https://fastapi.tiangolo.com/resources/
+  73. https://fastapi.tiangolo.com/about/
+  74. https://fastapi.tiangolo.com/release-notes/
+  75. https://fastapi.tiangolo.com/
+  76. https://github.com/fastapi/fastapi
+  77. https://fastapi.tiangolo.com/
+  78. https://fastapi.tiangolo.com/#sponsors
+  79. https://fastapi.tiangolo.com/#opinions
+  80. https://fastapi.tiangolo.com/#typer-the-fastapi-of-clis
+  81. https://fastapi.tiangolo.com/#requirements
+  82. https://fastapi.tiangolo.com/#installation
+  83. https://fastapi.tiangolo.com/#example
+  84. https://fastapi.tiangolo.com/#create-it
+  85. https://fastapi.tiangolo.com/#run-it
+  86. https://fastapi.tiangolo.com/#check-it
+  87. https://fastapi.tiangolo.com/#interactive-api-docs
+  88. https://fastapi.tiangolo.com/#alternative-api-docs
+  89. https://fastapi.tiangolo.com/#example-upgrade
+  90. https://fastapi.tiangolo.com/#interactive-api-docs-upgrade
+  91. https://fastapi.tiangolo.com/#alternative-api-docs-upgrade
+  92. https://fastapi.tiangolo.com/#recap
+  93. https://fastapi.tiangolo.com/#performance
+  94. https://fastapi.tiangolo.com/#dependencies
+  95. https://fastapi.tiangolo.com/#standard-dependencies
+  96. https://fastapi.tiangolo.com/#without-standard-dependencies
+  97. https://fastapi.tiangolo.com/#additional-optional-dependencies
+  98. https://fastapi.tiangolo.com/#license
+  99. https://fastapi.tiangolo.com/features/
+ 100. https://fastapi.tiangolo.com/learn/
+ 101. https://fastapi.tiangolo.com/python-types/
+ 102. https://fastapi.tiangolo.com/async/
+ 103. https://fastapi.tiangolo.com/environment-variables/
+ 104. https://fastapi.tiangolo.com/virtual-environments/
+ 105. https://fastapi.tiangolo.com/tutorial/
+ 106. https://fastapi.tiangolo.com/tutorial/first-steps/
+ 107. https://fastapi.tiangolo.com/tutorial/path-params/
+ 108. https://fastapi.tiangolo.com/tutorial/query-params/
+ 109. https://fastapi.tiangolo.com/tutorial/body/
+ 110. https://fastapi.tiangolo.com/tutorial/query-params-str-validations/
+ 111. https://fastapi.tiangolo.com/tutorial/path-params-numeric-validations/
+ 112. https://fastapi.tiangolo.com/tutorial/query-param-models/
+ 113. https://fastapi.tiangolo.com/tutorial/body-multiple-params/
+ 114. https://fastapi.tiangolo.com/tutorial/body-fields/
+ 115. https://fastapi.tiangolo.com/tutorial/body-nested-models/
+ 116. https://fastapi.tiangolo.com/tutorial/schema-extra-example/
+ 117. https://fastapi.tiangolo.com/tutorial/extra-data-types/
+ 118. https://fastapi.tiangolo.com/tutorial/cookie-params/
+ 119. https://fastapi.tiangolo.com/tutorial/header-params/
+ 120. https://fastapi.tiangolo.com/tutorial/cookie-param-models/
+ 121. https://fastapi.tiangolo.com/tutorial/header-param-models/
+ 122. https://fastapi.tiangolo.com/tutorial/response-model/
+ 123. https://fastapi.tiangolo.com/tutorial/extra-models/
+ 124. https://fastapi.tiangolo.com/tutorial/response-status-code/
+ 125. https://fastapi.tiangolo.com/tutorial/request-forms/
+ 126. https://fastapi.tiangolo.com/tutorial/request-form-models/
+ 127. https://fastapi.tiangolo.com/tutorial/request-files/
+ 128. https://fastapi.tiangolo.com/tutorial/request-forms-and-files/
+ 129. https://fastapi.tiangolo.com/tutorial/handling-errors/
+ 130. https://fastapi.tiangolo.com/tutorial/path-operation-configuration/
+ 131. https://fastapi.tiangolo.com/tutorial/encoder/
+ 132. https://fastapi.tiangolo.com/tutorial/body-updates/
+ 133. https://fastapi.tiangolo.com/tutorial/dependencies/
+ 134. https://fastapi.tiangolo.com/tutorial/dependencies/classes-as-dependencies/
+ 135. https://fastapi.tiangolo.com/tutorial/dependencies/sub-dependencies/
+ 136. https://fastapi.tiangolo.com/tutorial/dependencies/dependencies-in-path-operation-decorators/
+ 137. https://fastapi.tiangolo.com/tutorial/dependencies/global-dependencies/
+ 138. https://fastapi.tiangolo.com/tutorial/dependencies/dependencies-with-yield/
+ 139. https://fastapi.tiangolo.com/tutorial/security/
+ 140. https://fastapi.tiangolo.com/tutorial/security/first-steps/
+ 141. https://fastapi.tiangolo.com/tutorial/security/get-current-user/
+ 142. https://fastapi.tiangolo.com/tutorial/security/simple-oauth2/
+ 143. https://fastapi.tiangolo.com/tutorial/security/oauth2-jwt/
+ 144. https://fastapi.tiangolo.com/tutorial/middleware/
+ 145. https://fastapi.tiangolo.com/tutorial/cors/
+ 146. https://fastapi.tiangolo.com/tutorial/sql-databases/
+ 147. https://fastapi.tiangolo.com/tutorial/bigger-applications/
+ 148. https://fastapi.tiangolo.com/tutorial/background-tasks/
+ 149. https://fastapi.tiangolo.com/tutorial/metadata/
+ 150. https://fastapi.tiangolo.com/tutorial/static-files/
+ 151. https://fastapi.tiangolo.com/tutorial/testing/
+ 152. https://fastapi.tiangolo.com/tutorial/debugging/
+ 153. https://fastapi.tiangolo.com/advanced/
+ 154. https://fastapi.tiangolo.com/advanced/path-operation-advanced-configuration/
+ 155. https://fastapi.tiangolo.com/advanced/additional-status-codes/
+ 156. https://fastapi.tiangolo.com/advanced/response-directly/
+ 157. https://fastapi.tiangolo.com/advanced/custom-response/
+ 158. https://fastapi.tiangolo.com/advanced/additional-responses/
+ 159. https://fastapi.tiangolo.com/advanced/response-cookies/
+ 160. https://fastapi.tiangolo.com/advanced/response-headers/
+ 161. https://fastapi.tiangolo.com/advanced/response-change-status-code/
+ 162. https://fastapi.tiangolo.com/advanced/advanced-dependencies/
+ 163. https://fastapi.tiangolo.com/advanced/security/
+ 164. https://fastapi.tiangolo.com/advanced/security/oauth2-scopes/
+ 165. https://fastapi.tiangolo.com/advanced/security/http-basic-auth/
+ 166. https://fastapi.tiangolo.com/advanced/using-request-directly/
+ 167. https://fastapi.tiangolo.com/advanced/dataclasses/
+ 168. https://fastapi.tiangolo.com/advanced/middleware/
+ 169. https://fastapi.tiangolo.com/advanced/sub-applications/
+ 170. https://fastapi.tiangolo.com/advanced/behind-a-proxy/
+ 171. https://fastapi.tiangolo.com/advanced/templates/
+ 172. https://fastapi.tiangolo.com/advanced/websockets/
+ 173. https://fastapi.tiangolo.com/advanced/events/
+ 174. https://fastapi.tiangolo.com/advanced/testing-websockets/
+ 175. https://fastapi.tiangolo.com/advanced/testing-events/
+ 176. https://fastapi.tiangolo.com/advanced/testing-dependencies/
+ 177. https://fastapi.tiangolo.com/advanced/async-tests/
+ 178. https://fastapi.tiangolo.com/advanced/settings/
+ 179. https://fastapi.tiangolo.com/advanced/openapi-callbacks/
+ 180. https://fastapi.tiangolo.com/advanced/openapi-webhooks/
+ 181. https://fastapi.tiangolo.com/advanced/wsgi/
+ 182. https://fastapi.tiangolo.com/advanced/generate-clients/
+ 183. https://fastapi.tiangolo.com/fastapi-cli/
+ 184. https://fastapi.tiangolo.com/deployment/
+ 185. https://fastapi.tiangolo.com/deployment/versions/
+ 186. https://fastapi.tiangolo.com/deployment/https/
+ 187. https://fastapi.tiangolo.com/deployment/manually/
+ 188. https://fastapi.tiangolo.com/deployment/concepts/
+ 189. https://fastapi.tiangolo.com/deployment/cloud/
+ 190. https://fastapi.tiangolo.com/deployment/server-workers/
+ 191. https://fastapi.tiangolo.com/deployment/docker/
+ 192. https://fastapi.tiangolo.com/how-to/
+ 193. https://fastapi.tiangolo.com/how-to/general/
+ 194. https://fastapi.tiangolo.com/how-to/graphql/
+ 195. https://fastapi.tiangolo.com/how-to/custom-request-and-route/
+ 196. https://fastapi.tiangolo.com/how-to/conditional-openapi/
+ 197. https://fastapi.tiangolo.com/how-to/extending-openapi/
+ 198. https://fastapi.tiangolo.com/how-to/separate-openapi-schemas/
+ 199. https://fastapi.tiangolo.com/how-to/custom-docs-ui-assets/
+ 200. https://fastapi.tiangolo.com/how-to/configure-swagger-ui/
+ 201. https://fastapi.tiangolo.com/how-to/testing-database/
+ 202. https://fastapi.tiangolo.com/reference/
+ 203. https://fastapi.tiangolo.com/reference/fastapi/
+ 204. https://fastapi.tiangolo.com/reference/parameters/
+ 205. https://fastapi.tiangolo.com/reference/status/
+ 206. https://fastapi.tiangolo.com/reference/uploadfile/
+ 207. https://fastapi.tiangolo.com/reference/exceptions/
+ 208. https://fastapi.tiangolo.com/reference/dependencies/
+ 209. https://fastapi.tiangolo.com/reference/apirouter/
+ 210. https://fastapi.tiangolo.com/reference/background/
+ 211. https://fastapi.tiangolo.com/reference/request/
+ 212. https://fastapi.tiangolo.com/reference/websockets/
+ 213. https://fastapi.tiangolo.com/reference/httpconnection/
+ 214. https://fastapi.tiangolo.com/reference/response/
+ 215. https://fastapi.tiangolo.com/reference/responses/
+ 216. https://fastapi.tiangolo.com/reference/middleware/
+ 217. https://fastapi.tiangolo.com/reference/openapi/
+ 218. https://fastapi.tiangolo.com/reference/openapi/docs/
+ 219. https://fastapi.tiangolo.com/reference/openapi/models/
+ 220. https://fastapi.tiangolo.com/reference/security/
+ 221. https://fastapi.tiangolo.com/reference/encoders/
+ 222. https://fastapi.tiangolo.com/reference/staticfiles/
+ 223. https://fastapi.tiangolo.com/reference/templating/
+ 224. https://fastapi.tiangolo.com/reference/testclient/
+ 225. https://fastapi.tiangolo.com/fastapi-people/
+ 226. https://fastapi.tiangolo.com/resources/
+ 227. https://fastapi.tiangolo.com/help-fastapi/
+ 228. https://fastapi.tiangolo.com/contributing/
+ 229. https://fastapi.tiangolo.com/project-generation/
+ 230. https://fastapi.tiangolo.com/external-links/
+ 231. https://fastapi.tiangolo.com/newsletter/
+ 232. https://fastapi.tiangolo.com/management-tasks/
+ 233. https://fastapi.tiangolo.com/about/
+ 234. https://fastapi.tiangolo.com/alternatives/
+ 235. https://fastapi.tiangolo.com/history-design-future/
+ 236. https://fastapi.tiangolo.com/benchmarks/
+ 237. https://fastapi.tiangolo.com/management/
+ 238. https://fastapi.tiangolo.com/release-notes/
+ 239. https://fastapi.tiangolo.com/#sponsors
+ 240. https://fastapi.tiangolo.com/#opinions
+ 241. https://fastapi.tiangolo.com/#typer-the-fastapi-of-clis
+ 242. https://fastapi.tiangolo.com/#requirements
+ 243. https://fastapi.tiangolo.com/#installation
+ 244. https://fastapi.tiangolo.com/#example
+ 245. https://fastapi.tiangolo.com/#create-it
+ 246. https://fastapi.tiangolo.com/#run-it
+ 247. https://fastapi.tiangolo.com/#check-it
+ 248. https://fastapi.tiangolo.com/#interactive-api-docs
+ 249. https://fastapi.tiangolo.com/#alternative-api-docs
+ 250. https://fastapi.tiangolo.com/#example-upgrade
+ 251. https://fastapi.tiangolo.com/#interactive-api-docs-upgrade
+ 252. https://fastapi.tiangolo.com/#alternative-api-docs-upgrade
+ 253. https://fastapi.tiangolo.com/#recap
+ 254. https://fastapi.tiangolo.com/#performance
+ 255. https://fastapi.tiangolo.com/#dependencies
+ 256. https://fastapi.tiangolo.com/#standard-dependencies
+ 257. https://fastapi.tiangolo.com/#without-standard-dependencies
+ 258. https://fastapi.tiangolo.com/#additional-optional-dependencies
+ 259. https://fastapi.tiangolo.com/#license
+ 260. https://fastapi.tiangolo.com/#fastapi
+ 261. https://fastapi.tiangolo.com/
+ 262. https://github.com/fastapi/fastapi/actions?query=workflow:Test+event:push+branch:master
+ 263. https://coverage-badge.samuelcolvin.workers.dev/redirect/fastapi/fastapi
+ 264. https://pypi.org/project/fastapi
+ 265. https://pypi.org/project/fastapi
+ 266. https://fastapi.tiangolo.com/
+ 267. https://github.com/fastapi/fastapi
+ 268. https://fastapi.tiangolo.com/#performance
+ 269. https://github.com/OAI/OpenAPI-Specification
+ 270. https://json-schema.org/
+ 271. https://fastapi.tiangolo.com/#sponsors
+ 272. https://blockbee.io/?ref=fastapi
+ 273. https://platform.sh/try-it-now/?utm_source=fastapi-signup&utm_medium=banner&utm_campaign=FastAPI-signup-June-2023
+ 274. https://github.com/scalar/scalar/?utm_source=fastapi&utm_medium=website&utm_campaign=main-badge
+ 275. https://www.propelauth.com/?utm_source=fastapi&utm_campaign=1223&utm_medium=mainbadge
+ 276. https://zuplo.link/fastapi-gh
+ 277. https://liblab.com/?utm_source=fastapi
+ 278. https://docs.render.com/deploy-fastapi?utm_source=deploydoc&utm_medium=referral&utm_campaign=fastapi
+ 279. https://www.coderabbit.ai/?utm_source=fastapi&utm_medium=badge&utm_campaign=fastapi
+ 280. https://subtotal.com/?utm_source=fastapi&utm_medium=sponsorship&utm_campaign=open-source
+ 281. https://databento.com/
+ 282. https://speakeasy.com/?utm_source=fastapi+repo&utm_medium=github+sponsorship
+ 283. https://www.svix.com/
+ 284. https://www.stainlessapi.com/?utm_source=fastapi&utm_medium=referral
+ 285. https://www.permit.io/blog/implement-authorization-in-fastapi?utm_source=github&utm_medium=referral&utm_campaign=fastapi
+ 286. https://www.interviewpal.com/?utm_source=fastapi&utm_medium=open-source&utm_campaign=dev-hiring
+ 287. https://dribia.com/en/
+ 288. https://fastapi.tiangolo.com/fastapi-people/#sponsors
+ 289. https://fastapi.tiangolo.com/#opinions
+ 290. https://github.com/fastapi/fastapi/pull/26
+ 291. https://eng.uber.com/ludwig-v0-2/
+ 292. https://netflixtechblog.com/introducing-dispatch-da4b8a2a8072
+ 293. https://pythonbytes.fm/episodes/show/123/time-to-right-the-py-wrongs?time_in_sec=855
+ 294. https://twitter.com/brianokken/status/1112220079972728832
+ 295. https://github.com/hugapi/hug
+ 296. https://news.ycombinator.com/item?id=19455465
+ 297. https://explosion.ai/
+ 298. https://spacy.io/
+ 299. https://twitter.com/_inesmontani/status/1144173225322143744
+ 300. https://twitter.com/honnibal/status/1144031421859655680
+ 301. https://www.linkedin.com/posts/deonpillsbury_cisco-cx-python-activity-6963242628536487936-trAp/
+ 302. https://fastapi.tiangolo.com/#typer-the-fastapi-of-clis
+ 303. https://typer.tiangolo.com/
+ 304. https://typer.tiangolo.com/
+ 305. https://fastapi.tiangolo.com/#requirements
+ 306. https://www.starlette.io/
+ 307. https://docs.pydantic.dev/
+ 308. https://fastapi.tiangolo.com/#installation
+ 309. https://fastapi.tiangolo.com/virtual-environments/
+ 310. https://fastapi.tiangolo.com/#example
+ 311. https://fastapi.tiangolo.com/#create-it
+ 312. https://fastapi.tiangolo.com/async/#in-a-hurry
+ 313. https://fastapi.tiangolo.com/#run-it
+ 314. https://www.uvicorn.org/
+ 315. https://fastapi.tiangolo.com/fastapi-cli/
+ 316. https://fastapi.tiangolo.com/#check-it
+ 317. http://127.0.0.1:8000/items/5?q=somequery
+ 318. https://fastapi.tiangolo.com/#interactive-api-docs
+ 319. http://127.0.0.1:8000/docs
+ 320. https://github.com/swagger-api/swagger-ui
+ 321. https://fastapi.tiangolo.com/#alternative-api-docs
+ 322. http://127.0.0.1:8000/redoc
+ 323. https://github.com/Rebilly/ReDoc
+ 324. https://fastapi.tiangolo.com/#example-upgrade
+ 325. https://fastapi.tiangolo.com/#interactive-api-docs-upgrade
+ 326. http://127.0.0.1:8000/docs
+ 327. https://fastapi.tiangolo.com/#alternative-api-docs-upgrade
+ 328. http://127.0.0.1:8000/redoc
+ 329. https://fastapi.tiangolo.com/#recap
+ 330. https://fastapi.tiangolo.com/tutorial/
+ 331. https://strawberry.rocks/
+ 332. https://fastapi.tiangolo.com/#performance
+ 333. https://www.techempower.com/benchmarks/#section=test&runid=7464e520-0dc2-473d-bd34-dbdfd7e85911&hw=ph&test=query&l=zijzen-7
+ 334. https://fastapi.tiangolo.com/benchmarks/
+ 335. https://fastapi.tiangolo.com/#dependencies
+ 336. https://fastapi.tiangolo.com/#standard-dependencies
+ 337. https://github.com/JoshData/python-email-validator
+ 338. https://www.python-httpx.org/
+ 339. https://jinja.palletsprojects.com/
+ 340. https://github.com/Kludex/python-multipart
+ 341. https://www.uvicorn.org/
+ 342. https://fastapi.tiangolo.com/#without-standard-dependencies
+ 343. https://fastapi.tiangolo.com/#additional-optional-dependencies
+ 344. https://docs.pydantic.dev/latest/usage/pydantic_settings/
+ 345. https://docs.pydantic.dev/latest/usage/types/extra_types/extra_types/
+ 346. https://github.com/ijl/orjson
+ 347. https://github.com/esnme/ultrajson
+ 348. https://fastapi.tiangolo.com/#license
+ 349. https://fastapi.tiangolo.com/features/
+ 350. https://tiangolo.com/
+ 351. https://squidfunk.github.io/mkdocs-material/
+
+   Hidden links:
+ 353. javascript:void(0)
+ 354. https://github.com/fastapi/fastapi
+ 355. https://discord.gg/VQjSZaeJmf
+ 356. https://twitter.com/fastapi
+ 357. https://www.linkedin.com/company/fastapi
+ 358. https://tiangolo.com/
+ Warning: User-Agent string does not contain "Lynx" or "L_y_n_x"!
