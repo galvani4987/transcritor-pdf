@@ -92,9 +92,9 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
     * [x] Remover a lógica de `argparse` e instanciar a aplicação FastAPI.
 * [x] **Modularizar Lógica de Negócio:** (TASK-010)
     * [x] Refatorar o pipeline em uma função autônoma `process_pdf_pipeline(file_content: bytes)`.
-* [ ] **Implementar Endpoints da API:**
-    * [ ] Criar endpoint `GET /health/` para verificação de saúde.
-    * [ ] Criar endpoint `POST /process-pdf/` que aceita `UploadFile`.
+* [x] **Implementar Endpoints da API:** (TASK-011)
+    * [x] Criar endpoint `GET /health/` para verificação de saúde.
+    * [x] Criar endpoint `POST /process-pdf/` que aceita `UploadFile`.
 * [ ] **Implementar Tratamento de Erros da API:**
     * [ ] Definir e implementar respostas de erro padronizadas em JSON com códigos de status HTTP apropriados.
 * [ ] **Implementar Gerenciamento de Schema do Banco de Dados:**

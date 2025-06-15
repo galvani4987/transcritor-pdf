@@ -3,7 +3,7 @@
 Main entry point for the Transcritor PDF API.
 """
 import logging
-from fastapi import FastAPI
+from fastapi import FastAPI, File, UploadFile
 from typing import List, Dict, Any, Optional # Added Optional for consistency
 
 # --- FastAPI App Initialization ---
@@ -30,6 +30,40 @@ async def root():
     """
     logger.info("Root endpoint '/' was called.")
     return {"message": "Welcome to the Transcritor PDF API"}
+
+# --- Health Check Endpoint ---
+@app.get("/health/")
+async def health_check():
+    """
+    Health check endpoint to verify if the API is running.
+    """
+    logger.info("Health check endpoint '/health/' was called.")
+    return {"status": "ok"}
+
+# --- PDF Processing Endpoint ---
+@app.post("/process-pdf/")
+async def process_pdf_endpoint(file: UploadFile = File(...)):
+    """
+    Endpoint to upload and process a PDF file.
+    It reads the file, then calls the main processing pipeline.
+    """
+    logger.info(f"Received file: {file.filename} (type: {file.content_type})")
+    try:
+        file_bytes = await file.read()
+        logger.info(f"File read into memory, size: {len(file_bytes)} bytes.")
+
+        # Call the main processing pipeline
+        result = await process_pdf_pipeline(file_content=file_bytes, filename=file.filename)
+
+        logger.info(f"Processing finished for {file.filename}. Result status: {result.get('status')}")
+        return result
+    except Exception as e:
+        logger.error(f"Error processing file {file.filename}: {e}", exc_info=True)
+        # Consider returning a more specific FastAPI HTTPExeption here
+        return {"status": "error", "filename": file.filename, "message": f"An unexpected error occurred: {str(e)}"}
+    finally:
+        await file.close()
+        logger.info(f"File {file.filename} closed.")
 
 # --- Placeholder for future imports and pipeline logic ---
 # These would eventually be real imports if logic is moved to other files/modules
