@@ -85,21 +85,24 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 
 ### Fase 7: Integração com `modular-dashboard` como Microsserviço API
 
-* [ ] **Atualizar Dependências da API:**
-    * [ ] Adicionar `fastapi` e `uvicorn[standard]` ao arquivo `requirements.txt`.
-* [ ] **Refatorar Ponto de Entrada (`src/main.py`):**
-    * [ ] Remover a lógica de `argparse` e instanciar a aplicação FastAPI.
-* [ ] **Modularizar Lógica de Negócio:**
-    * [ ] Refatorar o pipeline em uma função autônoma `process_pdf_pipeline(file_content: bytes)`.
-* [ ] **Implementar Endpoints da API:**
-    * [ ] Criar endpoint `GET /health/` para verificação de saúde.
-    * [ ] Criar endpoint `POST /process-pdf/` que aceita `UploadFile`.
-* [ ] **Implementar Tratamento de Erros da API:**
-    * [ ] Definir e implementar respostas de erro padronizadas em JSON com códigos de status HTTP apropriados.
-* [ ] **Implementar Gerenciamento de Schema do Banco de Dados:**
-    * [ ] Usar o evento `@app.on_event("startup")` para executar `CREATE EXTENSION` e `CREATE TABLE`.
-* [ ] **Escrever Testes da API:**
-    * [ ] Implementar testes de integração para os endpoints (`/health`, `/process-pdf/`) usando o `TestClient` do FastAPI.
+* ✅ Doc Research: Uvicorn (TASK-031)
+* [x] **Atualizar Dependências da API:** (TASK-008)
+    * [x] Adicionar `fastapi` e `uvicorn[standard]` ao arquivo `requirements.txt`.
+* [x] **Refatorar Ponto de Entrada (`src/main.py`):** (TASK-009)
+    * [x] Remover a lógica de `argparse` e instanciar a aplicação FastAPI.
+* [x] **Modularizar Lógica de Negócio:** (TASK-010)
+    * [x] Refatorar o pipeline em uma função autônoma `process_pdf_pipeline(file_content: bytes)`.
+* [x] **Implementar Endpoints da API:** (TASK-011)
+    * [x] Criar endpoint `GET /health/` para verificação de saúde.
+    * [x] Criar endpoint `POST /process-pdf/` que aceita `UploadFile`.
+* [x] **Implementar Tratamento de Erros da API:** (TASK-012)
+    * [x] Definir e implementar respostas de erro padronizadas em JSON com códigos de status HTTP apropriados.
+* ✅ Doc Research: pgvector (Vector Storage with PostgreSQL) (TASK-024)
+* ✅ Doc Research: asyncpg (Async PostgreSQL Driver) (TASK-030)
+* [x] **Implementar Gerenciamento de Schema do Banco de Dados:** (TASK-013)
+    * [x] Usar o evento `@app.on_event("startup")` para executar `CREATE EXTENSION` e `CREATE TABLE`.
+* [x] **Escrever Testes da API:** (TASK-014)
+    * [x] Implementar testes de integração para os endpoints (`/health`, `/process-pdf/`) usando o `TestClient` do FastAPI.
 * [ ] **Validar Conexão e Documentação:**
     * [ ] Revisar `vector_store_handler.py` para conexão via variáveis de ambiente.
     * [ ] Atualizar o `README.md` do projeto com a documentação da nova API.

@@ -23,7 +23,12 @@ asyncpg             # Driver Async PostgreSQL (para pgvector)
 psycopg2-binary     # Driver Sync PostgreSQL (pode ser necessário para compatibilidade ou ferramentas)
 # langchain-postgres # Integração Langchain específica para PGVector (considerar depois)
 
+# === API & Web Server ===
+fastapi             # Framework para construção de APIs
+uvicorn[standard]   # Servidor ASGI para FastAPI (com extras como uvloop, httptools)
+
 # === Testing ===
 pytest              # Framework de teste
 pytest-mock         # Fixture para mocking/patching em testes
 pytest-asyncio      # Plugin para suportar testes async com pytest
+httpx               # Cliente HTTP assíncrono, dependência do TestClient do FastAPI

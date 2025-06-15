@@ -2,7 +2,7 @@
 id: TASK-024
 title: "Doc Research: pgvector (Vector Storage with PostgreSQL)"
 epic: "Documentation"
-status: backlog
+status: done
 priority: medium
 dependencies: []
 assignee: Jules
@@ -27,4 +27,13 @@ Research official documentation for pgvector. Identify key concepts, setup (incl
 
 ### Relatório de Execução
 
-(Esta seção deve ser deixada em branco no template)
+Successfully researched pgvector.
+- Accessed the official pgvector documentation on GitHub (https://github.com/pgvector/pgvector).
+- Extracted key information including:
+  - Installation and enabling the `vector` extension.
+  - The `vector(dimensions)` data type.
+  - SQL examples for table creation with vector columns.
+  - HNSW and IVFFlat index types and their creation.
+  - SQL examples for inserting vector data and performing similarity searches (L2, inner product, cosine distance).
+  - Notes on indexing and performance.
+- Created the summary file `docs/reference/pgvector_summary.txt` with this information and a link to the source.

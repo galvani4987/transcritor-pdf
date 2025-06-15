@@ -1,20 +1,136 @@
 # -*- coding: utf-8 -*-
 """
-Main entry point for the Transcritor PDF CLI application.
-
-Orchestrates the workflow by splitting the PDF and then processing each page
-using a helper function. Includes logging, optional output saving, validation,
-summary, and cleanup. Refactored for clarity.
+Main entry point for the Transcritor PDF API.
 """
-import argparse
-import sys
-import os
-import json
-import asyncio
 import logging
-from typing import Dict, Any, Optional, List # Added List
+from fastapi import FastAPI, File, UploadFile, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY, HTTP_500_INTERNAL_SERVER_ERROR
+from typing import List, Dict, Any, Optional
+
+# --- FastAPI App Initialization ---
+app = FastAPI(
+    title="Transcritor PDF API",
+    description="API para processar arquivos PDF, extrair texto e informações estruturadas, e preparar dados para RAG.",
+    version="0.1.0"
+)
+
+# --- Exception Handlers ---
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """
+    Handles validation errors (e.g., invalid request body).
+    Returns a 422 Unprocessable Entity response with error details.
+    """
+    logger.error(f"Validation error: {exc.errors()} for request: {request.url.path}", exc_info=False) # exc_info=False as exc.errors() is detailed enough
+    # It's good practice to log exc.body() if the body content might be relevant and not too large/sensitive
+    # logger.debug(f"Request body: {exc.body()}")
+    return JSONResponse(
+        status_code=HTTP_422_UNPROCESSABLE_ENTITY,
+        # Providing a more structured error, including the type of error and where it occurred.
+        content={"detail": "Validation Error", "errors": exc.errors()},
+        # Alternative simpler content: content={"detail": exc.errors(), "body": exc.body}
+    )
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    """
+    Handles FastAPI's HTTPException.
+    Ensures these are also logged and returned in a consistent JSON format.
+    FastAPI does this by default, but explicit handling allows for custom logging or format if needed.
+    """
+    logger.error(f"HTTPException: {exc.status_code} {exc.detail} for request: {request.url.path}", exc_info=False)
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail}, # This is FastAPI's default structure for HTTPException
+    )
+
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception):
+    """
+    Handles any other unhandled exceptions.
+    Returns a 500 Internal Server Error response.
+    """
+    logger.error(f"Unhandled exception: {str(exc)} for request: {request.url.path}", exc_info=True)
+    return JSONResponse(
+        status_code=HTTP_500_INTERNAL_SERVER_ERROR,
+        content={"detail": "An unexpected internal server error occurred. Please contact support."},
+        # It's generally not a good idea to expose raw exception details to the client in production.
+        # For debugging, you might include: "error_type": type(exc).__name__, "message": str(exc)
+    )
+
+# --- Database Setup & Teardown Events ---
+# Import db utilities
+from .db_config import connect_to_db, close_db_connection, db_pool, EMBEDDING_DIMENSIONS
+import asyncpg # Required for conn.execute within startup event
+
+@app.on_event("startup")
+async def startup_db_event():
+    """
+    Connects to the database and creates the necessary table(s) if they don't exist.
+    """
+    logger.info("FastAPI startup event: Attempting to connect to database and setup schema...")
+    await connect_to_db() # Establishes the db_pool
+    if db_pool: # Ensure pool was created successfully
+        async with db_pool.acquire() as conn:
+            # It's good practice to use transactions for DDL sequences,
+            # though for simple IF NOT EXISTS it might be less critical.
+            async with conn.transaction():
+                try:
+                    # Create vector extension
+                    await conn.execute("CREATE EXTENSION IF NOT EXISTS vector;")
+                    logger.info("Ensured 'vector' extension exists.")
+
+                    # Define and create documents table
+                    # Using SERIAL for ID for simplicity, UUID could be an alternative
+                    # EMBEDDING_DIMENSIONS will be used from db_config
+                    create_table_query = f"""
+                    CREATE TABLE IF NOT EXISTS documents (
+                        id SERIAL PRIMARY KEY,
+                        filename TEXT,
+                        page_number INTEGER,
+                        text_content TEXT,
+                        metadata JSONB,
+                        embedding VECTOR({EMBEDDING_DIMENSIONS}),
+                        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                        UNIQUE(filename, page_number) -- Assuming a document page is unique
+                    );
+                    """
+                    # Added more fields: filename, page_number, created_at, and a UNIQUE constraint
+                    await conn.execute(create_table_query)
+                    logger.info(f"Ensured 'documents' table exists with embedding dimension {EMBEDDING_DIMENSIONS}.")
+
+                    # Example: Create an index (optional, can also be managed via migrations)
+                    # This is a basic index, refer to pgvector docs for IVFFlat or HNSW for larger datasets
+                    create_index_query = f"""
+                    CREATE INDEX IF NOT EXISTS idx_documents_embedding ON documents USING ivfflat (embedding vector_l2_ops) WITH (lists = 100);
+                    """
+                    # Using vector_l2_ops as an example, choose based on your distance metric
+                    # await conn.execute(create_index_query)
+                    # logger.info("Ensured basic index on embedding column exists (example using IVFFlat).")
+                    # Commenting out index creation for now, as it might be slow for startup
+                    # and depends on the specific vector ops preferred (l2, cosine, ip).
+
+                except asyncpg.exceptions.PostgresError as pe:
+                    logger.error(f"PostgreSQL error during startup schema setup: {pe}")
+                except Exception as e:
+                    logger.error(f"An unexpected error occurred during startup schema setup: {e}", exc_info=True)
+    else:
+        logger.error("Database pool not available after connect_to_db() call, skipping schema setup. Application might not function correctly.")
+        # Depending on requirements, might raise an error here to stop app startup if DB is critical.
+
+@app.on_event("shutdown")
+async def shutdown_db_event():
+    """
+    Closes the database connection pool.
+    """
+    logger.info("FastAPI shutdown event: Closing database connection pool...")
+    await close_db_connection()
 
 # --- Logging Configuration ---
+# Basic logging setup, can be expanded later (e.g., from config file)
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
@@ -22,289 +138,230 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# --- Module Imports ---
-try:
-    import pypdfium2 as pdfium
-    from PIL import Image # Import Image here as it's used in helper
-except ImportError as e:
-    logger.critical(f"Required library not found ({e}). Please install requirements.txt")
-    sys.exit(1)
-
-from .input_handler.pdf_splitter import split_pdf_to_pages, TEMP_PAGE_DIR
-from .input_handler.loader import load_page_image
-from .preprocessor.image_processor import preprocess_image
-from .extractor.text_extractor import extract_text_from_image
-from .extractor.info_parser import parse_extracted_info
-from .output_handler.formatter import format_output_for_rag
-from .vectorizer.embedding_generator import generate_embeddings_for_chunks
-from .vectorizer.vector_store_handler import add_chunks_to_vector_store
-
-# --- Helper Function for Processing a Single Page ---
-def _process_single_page(page_path: str, page_number: int, pdf_file_path: str) -> Dict[str, Any]:
+# --- Root Endpoint ---
+@app.get("/")
+async def root():
     """
-    Processes a single page image: loads, preprocesses, extracts text, parses info.
-
-    Args:
-        page_path: Path to the temporary image file for the page.
-        page_number: The page number (1-based).
-        pdf_file_path: Path to the original PDF (for context/metadata).
-
-    Returns:
-        A dictionary containing the processed data for the page, including
-        'page_number', 'extracted_text', parsed fields, and potentially an 'error' key.
+    Root endpoint providing a welcome message.
     """
-    logger.info(f"--- Processing Page {page_number} (File: {page_path}) ---")
-    page_image: Optional[Image.Image] = None
-    processed_page_image: Optional[Image.Image] = None
-    extracted_text: Optional[str] = None
-    parsed_info: Optional[Dict[str, Any]] = None
-    page_result: Dict[str, Any] = { # Initialize result dict for this page
-        "page_number": page_number,
-        "source_file": pdf_file_path,
-        "temp_image_path": page_path,
-        "error": None, # Default to no error
-        "extracted_text": None,
-    }
+    logger.info("Root endpoint '/' was called.")
+    return {"message": "Welcome to the Transcritor PDF API"}
+
+# --- Health Check Endpoint ---
+@app.get("/health/")
+async def health_check():
+    """
+    Health check endpoint to verify if the API is running.
+    """
+    logger.info("Health check endpoint '/health/' was called.")
+    return {"status": "ok"}
+
+# --- PDF Processing Endpoint ---
+@app.post("/process-pdf/")
+async def process_pdf_endpoint(file: UploadFile = File(...)):
+    """
+    Endpoint to upload and process a PDF file.
+    It reads the file, then calls the main processing pipeline.
+    """
+    logger.info(f"Received file: {file.filename} (type: {file.content_type})")
+
+    # Basic file validation
+    if not file.filename:
+        logger.warning("File upload attempt with no filename.")
+        raise HTTPException(status_code=400, detail="No filename provided.")
+
+    if file.content_type != "application/pdf":
+        logger.warning(f"Invalid file type: {file.content_type} for file {file.filename}. Only PDF is allowed.")
+        raise HTTPException(status_code=415, detail="Invalid file type. Only PDF files are allowed.")
 
     try:
-        # Step 2: Load Page Image
-        logger.info("--- Step 2: Loading Page Image ---")
-        page_image = load_page_image(page_path)
+        file_bytes = await file.read()
+        logger.info(f"File '{file.filename}' read into memory, size: {len(file_bytes)} bytes.")
 
-        if page_image:
-            # Step 3: Preprocess Page Image
-            logger.info("--- Step 3: Preprocessing Page Image ---")
-            processed_page_image = preprocess_image(page_image)
-            page_result["preprocessing_applied"] = True # Mark as applied
+        if not file_bytes:
+            logger.warning(f"Uploaded file '{file.filename}' is empty.")
+            raise HTTPException(status_code=400, detail="Uploaded file is empty.")
 
-            # Step 4: Extract Text from Image
-            logger.info("--- Step 4: Extracting Text ---")
-            extracted_text = extract_text_from_image(processed_page_image)
-            page_result["extracted_text"] = extracted_text if extracted_text else "Extraction Failed"
+        # Call the main processing pipeline
+        result = await process_pdf_pipeline(file_content=file_bytes, filename=file.filename)
 
-            # Step 4.5: Parse Structured Information
-            if extracted_text:
-                logger.info("--- Step 4.5: Parsing Extracted Text ---")
-                parsed_info = parse_extracted_info(extracted_text)
-                if parsed_info:
-                    logger.info("  Successfully parsed structured information.")
-                    # Merge parsed info into the page result
-                    page_result.update(parsed_info)
-                else:
-                    logger.warning("  Structured information parsing failed or returned None.")
-                    # Keep parsed_info fields as potentially None or default in page_result
-            else:
-                logger.warning("  Skipping information parsing because text extraction failed.")
+        logger.info(f"Processing finished for '{file.filename}'. Result status: {result.get('status')}")
 
-    except FileNotFoundError as e:
-         logger.error(f"Could not load page image: {e}. Skipping page {page_number}.")
-         page_result["error"] = f"File not found: {e}"
-         page_result["extracted_text"] = "Loading Error"
-    except Exception as page_processing_error:
-        logger.error(f"Error processing page {page_number}: {page_processing_error}", exc_info=True)
-        page_result["error"] = str(page_processing_error)
-        page_result["extracted_text"] = "Processing Error"
-    finally:
-        # Close image objects for this page
-        if page_image:
-            try: page_image.close()
-            except Exception as e: logger.warning(f"Error closing original image pg {page_number}: {e}")
-        if processed_page_image:
-            try: processed_page_image.close()
-            except Exception as e: logger.warning(f"Error closing processed image pg {page_number}: {e}")
+        # Handle potential errors reported by the pipeline itself
+        if result.get("status") == "failed" or result.get("status") == "error":
+            error_message = result.get("message", "PDF processing failed.")
+            logger.error(f"Pipeline processing error for '{file.filename}': {error_message}")
+            # Determine appropriate status code based on pipeline's error type if possible
+            # For now, using 500 if pipeline signals failure, or 400 if it's a known processing issue.
+            # This part might need refinement as process_pdf_pipeline matures.
+            status_code = 400 if result.get("status") == "failed" else 500 # Example logic
+            raise HTTPException(status_code=status_code, detail=error_message)
 
-    return page_result
+        return result
 
-
-# --- Utility function for cleaning up temporary files ---
-def cleanup_temp_files(temp_files: List[Optional[str]]): # Accept Optional[str]
-    """Removes the temporary files created during processing."""
-    valid_temp_files = [f for f in temp_files if f is not None]
-    if not valid_temp_files: return
-    logger.info(f"Cleaning up {len(valid_temp_files)} temporary page files...")
-    # ...(rest of cleanup logic remains the same)...
-    files_removed_count = 0
-    for file_path in valid_temp_files:
-        if os.path.exists(file_path):
-            try: os.remove(file_path); files_removed_count += 1
-            except OSError as e: logger.warning(f"Could not remove temp file {file_path}: {e}")
-        else: logger.warning(f"Temp file path '{file_path}' not found during cleanup.")
-    logger.info(f"Removed {files_removed_count} temporary files.")
-    try:
-        if os.path.exists(TEMP_PAGE_DIR) and not os.listdir(TEMP_PAGE_DIR):
-            os.rmdir(TEMP_PAGE_DIR); logger.info(f"Removed empty temporary directory: {TEMP_PAGE_DIR}")
-    except OSError as e: logger.warning(f"Could not remove temp directory {TEMP_PAGE_DIR}: {e}")
-
-
-# --- Utility function to save output ---
-def save_rag_chunks_to_jsonl(rag_chunks: list[dict], output_file_path: str):
-    """Saves the list of RAG chunks to a JSON Lines file."""
-    logger.info(f"Saving {len(rag_chunks)} RAG chunks to: {output_file_path}")
-    # ...(rest of save logic remains the same)...
-    try:
-        with open(output_file_path, 'w', encoding='utf-8') as f:
-            for chunk_data in rag_chunks:
-                if 'embedding' in chunk_data and not isinstance(chunk_data['embedding'], list):
-                     logger.warning(f"Chunk {chunk_data.get('chunk_id')} has non-list embedding, saving as null.")
-                     chunk_data['embedding'] = None
-                json_record = json.dumps(chunk_data, ensure_ascii=False)
-                f.write(json_record + '\n')
-        logger.info("Successfully saved output file.")
-    except IOError as e: logger.error(f"Failed to write output file '{output_file_path}': {e}", exc_info=True)
-    except TypeError as e: logger.error(f"Failed to serialize chunk data to JSON: {e}", exc_info=True)
-
-
-# --- Utility function to display summary ---
-def display_summary(all_page_results: list[dict], rag_chunks: list[dict], total_pages_in_pdf: int):
-    """Displays a summary of the processing results to the console."""
-    print("\n" + "="*30 + " Processing Summary " + "="*30)
-    # ...(rest of summary logic remains the same)...
-    attempted_pages_count = len(all_page_results)
-    successful_pages_count = len([p for p in all_page_results if not p.get("error") and p.get("extracted_text") not in [None, "", "Extraction Failed", "Processing Error", "Loading Error"]])
-    rag_chunk_count = len(rag_chunks)
-    print(f"Total Pages in PDF: {total_pages_in_pdf if total_pages_in_pdf > 0 else 'Unknown'}")
-    print(f"Pages Attempted: {attempted_pages_count}")
-    print(f"Pages Successfully Processed (Text Extracted/Parsed): {successful_pages_count}")
-    print(f"RAG Chunks Generated: {rag_chunk_count}")
-    if successful_pages_count > 0:
-        print("\n--- Sample Extracted Info (First few successful pages) ---")
-        pages_to_show = 3; shown_count = 0
-        for page_data in all_page_results:
-            if not page_data.get("error") and page_data.get("extracted_text") not in [None, "", "Extraction Failed", "Processing Error", "Loading Error"]:
-                if shown_count >= pages_to_show: break
-                print(f"\nPage {page_data.get('page_number', '?')}:")
-                print(f"  Client Name: {page_data.get('client_name', 'N/A')}")
-                print(f"  Document Date: {page_data.get('document_date', 'N/A')}")
-                print(f"  Signature Found: {page_data.get('signature_found', 'N/A')}")
-                text_snippet = (page_data.get('extracted_text') or "")[:100].replace('\n', ' ') + "..."
-                print(f"  Text Snippet: {text_snippet}")
-                shown_count += 1
-        if shown_count == 0: print("  (No pages with successfully parsed info to display sample)")
-    print("="*80)
-
-
-# --- Main Pipeline Function (async) ---
-async def run_transcription_pipeline(pdf_file_path: str, output_file: str | None = None):
-    """
-    Executes the complete processing pipeline for a given PDF file asynchronously.
-
-    Args:
-        pdf_file_path: The path to the input PDF file.
-        output_file: Optional path to save the formatted RAG chunks as a JSONL file.
-    """
-    logger.info(f"Starting transcription pipeline for: {pdf_file_path}")
-    if output_file: logger.info(f"Output will be saved to: {output_file}")
-
-    temp_page_paths_generated: List[Optional[str]] = [] # Track all yielded paths
-    all_page_results: List[Dict[str, Any]] = [] # Stores results/errors for each page
-    rag_chunks: List[Dict[str, Any]] = []
-    total_pages_in_pdf = 0
-
-    try:
-        # --- Step 1: Split PDF into Pages (and get page count) ---
-        logger.info("--- Step 1: Splitting PDF into Pages ---")
-        try:
-            pdf_doc_check = pdfium.PdfDocument(pdf_file_path)
-            total_pages_in_pdf = len(pdf_doc_check)
-            pdf_doc_check.close()
-            logger.info(f"PDF contains {total_pages_in_pdf} pages.")
-        except Exception as e:
-            logger.error(f"Could not get page count before splitting: {e}")
-
-        page_path_generator = split_pdf_to_pages(pdf_file_path)
-
-        # --- Page Processing Loop (Refactored) ---
-        page_number = 0
-        for page_path in page_path_generator:
-            page_number += 1
-            temp_page_paths_generated.append(page_path) # Track path (or None)
-
-            if page_path is None:
-                logger.warning(f"Skipping processing for page {page_number} as splitting/saving failed.")
-                all_page_results.append({ # Record the splitting error
-                    "page_number": page_number, "error": "Page splitting/saving failed",
-                    "extracted_text": "Splitting Error", "source_file": pdf_file_path,
-                    "temp_image_path": None
-                })
-                continue # Skip to next page
-
-            # Call the helper function to process this single page
-            page_result = _process_single_page(page_path, page_number, pdf_file_path)
-            all_page_results.append(page_result)
-        # --- End Page Processing Loop ---
-
-        # Check if any pages were processed successfully before proceeding
-        if not any(p for p in all_page_results if not p.get("error")):
-             logger.warning("No pages were successfully processed.")
-             # Skip formatting, embedding, storage if no pages succeeded
-        else:
-            # --- Post-Loop Processing ---
-            logger.info("--- Step 5: Formatting Output for RAG ---")
-            rag_chunks = format_output_for_rag(all_page_results, pdf_file_path)
-
-            if output_file and rag_chunks:
-                save_rag_chunks_to_jsonl(rag_chunks, output_file)
-            elif output_file:
-                 logger.warning(f"Output file '{output_file}' requested, but no RAG chunks generated.")
-
-            if rag_chunks:
-                logger.info(f"  Generated {len(rag_chunks)} chunks suitable for RAG.")
-                logger.info("--- Step 6: Generating Embeddings ---")
-                rag_chunks_with_embeddings = generate_embeddings_for_chunks(rag_chunks)
-                chunks_to_store = [chunk for chunk in rag_chunks_with_embeddings if chunk.get('embedding')]
-
-                if chunks_to_store:
-                    logger.info("--- Step 7: Adding Chunks to Vector Store ---")
-                    await add_chunks_to_vector_store(chunks_to_store)
-                else:
-                    logger.warning("Skipping database insertion as no chunks had successful embeddings.")
-            else:
-                logger.warning("No RAG chunks were generated, skipping embedding and storage.")
-
-        # --- Display Summary ---
-        display_summary(all_page_results, rag_chunks, total_pages_in_pdf)
-
-        logger.info("Pipeline finished successfully.")
-
-    except Exception as pipeline_error:
-        logger.critical(f"Pipeline Error: Processing failed. Error: {pipeline_error}", exc_info=True)
-        raise # Re-raise to be caught by main_cli
-    finally:
-        # --- Cleanup ---
-        cleanup_temp_files(temp_page_paths_generated)
-
-
-# --- CLI Argument Parsing and Execution ---
-def main_cli():
-    """
-    Sets up CLI args, performs initial PDF validation, then starts the async pipeline.
-    """
-    logger.info("--- Transcritor PDF CLI Starting ---")
-    parser = argparse.ArgumentParser(description="Process PDF doc...")
-    parser.add_argument("pdf_file_path", type=str, help="Path to the PDF file.")
-    parser.add_argument("-o", "--output-file", type=str, default=None, help="Optional path to save RAG chunks (.jsonl).")
-    args = parser.parse_args()
-
-    pdf_path = args.pdf_file_path
-    logger.info(f"Validating input file: {pdf_path}")
-    if not os.path.isfile(pdf_path): logger.critical(f"Input Error: File not found: '{pdf_path}'"); sys.exit(1)
-
-    pdf_doc = None
-    try:
-        pdf_doc = pdfium.PdfDocument(pdf_path)
-        logger.info(f"Successfully opened PDF for initial validation ({len(pdf_doc)} pages).")
-        pdf_doc.close()
-    except pdfium.errors.PasswordError: logger.critical(f"Input Error: PDF '{pdf_path}' is password protected."); sys.exit(1)
-    except pdfium.errors.PdfiumError as e: logger.critical(f"Input Error: Failed to open/process PDF '{pdf_path}'. Error: {e}", exc_info=True); sys.exit(1)
-    except Exception as e: logger.critical(f"Input Error: Unexpected error validating PDF '{pdf_path}': {e}", exc_info=True); sys.exit(1)
-
-    try:
-        logger.info(f"Starting main processing pipeline for: {pdf_path}")
-        asyncio.run(run_transcription_pipeline(pdf_path, args.output_file))
-        logger.info("--- Transcritor PDF CLI Finished Successfully ---")
+    except HTTPException as http_exc:
+        # Re-raise HTTPException so it's caught by its specific handler or FastAPI default
+        logger.debug(f"Re-raising HTTPException for '{file.filename}': {http_exc.detail}")
+        raise http_exc
     except Exception as e:
-        logger.info("--- Transcritor PDF CLI Finished with Errors ---")
-        sys.exit(1) # Error already logged within pipeline
+        # This catches unexpected errors during file read or within the pipeline if not handled by HTTPExceptions
+        logger.error(f"Unexpected error processing file '{file.filename}': {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"An internal server error occurred while processing the PDF: {file.filename}.")
+    finally:
+        await file.close()
+        logger.info(f"File '{file.filename}' closed.")
 
-if __name__ == "__main__":
-    main_cli()
+# --- Placeholder for future imports and pipeline logic ---
+# These would eventually be real imports if logic is moved to other files/modules
+# from .input_handler.pdf_splitter import split_pdf_to_pages, TEMP_PAGE_DIR
+# from .input_handler.loader import load_page_image
+# (etc.)
+
+# --- Placeholder Helper Functions (Simulating PDF Processing Logic) ---
+
+async def split_pdf_to_pages(file_content: bytes) -> List[bytes]:
+    """
+    Placeholder: Simulates splitting PDF content into page images (bytes).
+    In reality, this would use pypdfium2 or similar to render pages.
+    """
+    logger.info(f"Simulating PDF split for content of length: {len(file_content)}")
+    # Simulate 2 pages for any PDF
+    dummy_page_image_bytes_1 = b"dummy_image_page_1_content"
+    dummy_page_image_bytes_2 = b"dummy_image_page_2_content"
+    return [dummy_page_image_bytes_1, dummy_page_image_bytes_2]
+
+async def load_page_image(image_bytes: bytes) -> Any:
+    """Placeholder: Simulates loading image bytes into an image object."""
+    logger.info(f"Simulating image load for bytes of length: {len(image_bytes)}")
+    return {"image_data": image_bytes, "format": "dummy_format"} # Simulate an image object
+
+async def preprocess_image(image_data: Any) -> Any:
+    """Placeholder: Simulates preprocessing an image."""
+    logger.info(f"Simulating preprocessing for image: {image_data.get('format')}")
+    return {"processed_image_data": image_data.get("image_data"), "filters_applied": ["dummy_filter"]}
+
+async def extract_text_from_image(image_data: Any) -> str:
+    """Placeholder: Simulates extracting text from an image."""
+    logger.info("Simulating text extraction.")
+    # Return different text for different "pages" if possible, based on dummy data
+    if image_data.get("processed_image_data") == b"dummy_image_page_1_content":
+        return "This is the simulated text for page 1. Client: John Doe. Date: 2023-01-15."
+    elif image_data.get("processed_image_data") == b"dummy_image_page_2_content":
+        return "Simulated text for page 2. Invoice: #123. Amount: $500."
+    return "Simulated generic extracted text."
+
+async def parse_extracted_info(text: str) -> Dict[str, Any]:
+    """Placeholder: Simulates parsing structured info from text."""
+    logger.info("Simulating info parsing from text.")
+    if "John Doe" in text:
+        return {"client_name": "John Doe", "document_date": "2023-01-15", "doc_type": "report"}
+    elif "Invoice #123" in text:
+        return {"invoice_number": "123", "amount": 500, "doc_type": "invoice"}
+    return {"parsed_field_1": "dummy_value_1", "parsed_field_2": "dummy_value_2"}
+
+async def format_output_for_rag(all_pages_parsed_info: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Placeholder: Simulates formatting data into RAG chunks."""
+    logger.info(f"Simulating RAG formatting for {len(all_pages_parsed_info)} pages.")
+    rag_chunks = []
+    for i, page_info in enumerate(all_pages_parsed_info):
+        rag_chunks.append({
+            "chunk_id": f"page_{i+1}_chunk_1",
+            "text_content": f"Content from page {i+1}: {page_info.get('client_name', page_info.get('invoice_number', 'N/A'))}",
+            "metadata": page_info
+        })
+    return rag_chunks
+
+async def generate_embeddings_for_chunks(chunks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Placeholder: Simulates generating embeddings for RAG chunks."""
+    logger.info(f"Simulating embedding generation for {len(chunks)} chunks.")
+    for chunk in chunks:
+        chunk["embedding"] = [0.1, 0.2, 0.3] # Dummy embedding
+    return chunks
+
+async def add_chunks_to_vector_store(chunks_with_embeddings: List[Dict[str, Any]]):
+    """Placeholder: Simulates adding chunks to a vector store."""
+    logger.info(f"Simulating adding {len(chunks_with_embeddings)} chunks to vector store.")
+    # In a real scenario, this would interact with a database.
+    return {"items_added": len(chunks_with_embeddings), "status": "simulated_success"}
+
+
+# --- Main PDF Processing Pipeline Function ---
+async def process_pdf_pipeline(file_content: bytes, filename: str) -> Dict[str, Any]:
+    """
+    Orchestrates the PDF processing pipeline using placeholder functions.
+    This function will be called by API endpoints.
+    """
+    logger.info(f"Starting PDF processing pipeline for file: {filename} (size: {len(file_content)} bytes)")
+    all_pages_parsed_info: List[Dict[str, Any]] = []
+    text_snippets: List[str] = [] # For the summary
+
+    try:
+        # 1. Split PDF into page images (bytes)
+        page_image_bytes_list = await split_pdf_to_pages(file_content)
+        logger.info(f"PDF split into {len(page_image_bytes_list)} simulated pages.")
+
+        # 2. Loop through pages
+        for i, page_bytes in enumerate(page_image_bytes_list):
+            page_number = i + 1
+            logger.info(f"Processing simulated page {page_number}...")
+
+            # 2a. Load page image (simulated)
+            page_image_obj = await load_page_image(page_bytes)
+
+            # 2b. Preprocess image (simulated)
+            processed_image_obj = await preprocess_image(page_image_obj)
+
+            # 2c. Extract text (simulated)
+            extracted_text = await extract_text_from_image(processed_image_obj)
+            text_snippets.append(extracted_text[:100] + "..." if extracted_text else "No text extracted.") # For summary
+            logger.info(f"  Extracted text (snippet) for page {page_number}: {text_snippets[-1]}")
+
+
+            # 2d. Parse structured info (simulated)
+            if extracted_text:
+                parsed_info = await parse_extracted_info(extracted_text)
+                parsed_info["page_number"] = page_number # Add page number for context
+                all_pages_parsed_info.append(parsed_info)
+                logger.info(f"  Parsed info for page {page_number}: {parsed_info}")
+            else:
+                logger.warning(f"  Skipping parsing for page {page_number} due to no extracted text.")
+                all_pages_parsed_info.append({"page_number": page_number, "error": "No text extracted"})
+
+
+        # 3. Aggregate results and format for RAG (simulated)
+        if not all_pages_parsed_info:
+            logger.warning("No information was parsed from any page.")
+            return {"status": "failed", "message": "No information could be processed from the PDF.", "filename": filename}
+
+        rag_chunks = await format_output_for_rag(all_pages_parsed_info)
+        logger.info(f"Formatted {len(rag_chunks)} RAG chunks.")
+
+        # 4. Generate embeddings (simulated)
+        chunks_with_embeddings = await generate_embeddings_for_chunks(rag_chunks)
+        logger.info(f"Generated embeddings for {len(chunks_with_embeddings)} chunks.")
+
+        # 5. Add to vector store (simulated)
+        storage_result = await add_chunks_to_vector_store(chunks_with_embeddings)
+        logger.info(f"Vector store result: {storage_result}")
+
+        final_status = "processing_simulated_complete"
+        if storage_result.get("status") != "simulated_success":
+            final_status = "processing_simulated_with_storage_issues"
+
+        return {
+            "status": final_status,
+            "filename": filename,
+            "pages_processed": len(page_image_bytes_list),
+            "total_chunks_generated": len(rag_chunks),
+            "text_snippets": text_snippets,
+            "vector_db_status": storage_result
+        }
+
+    except Exception as e:
+        logger.error(f"Error in PDF processing pipeline for {filename}: {e}", exc_info=True)
+        return {"status": "error", "message": str(e), "filename": filename}
+
+# To run this FastAPI app (ensure uvicorn is installed: pip install "uvicorn[standard]"):
+# uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+# Or from the project root, if src is in PYTHONPATH:
+# python -m uvicorn src.main:app --reload --host 0.0.0.0 --port 8000

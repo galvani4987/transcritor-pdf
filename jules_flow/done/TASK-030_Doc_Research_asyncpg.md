@@ -2,7 +2,7 @@
 id: TASK-030
 title: "Doc Research: asyncpg (Async PostgreSQL Driver)"
 epic: "Documentation"
-status: backlog
+status: done
 priority: medium
 dependencies: []
 assignee: Jules
@@ -29,4 +29,14 @@ Research official documentation for asyncpg. Identify key concepts for asynchron
 
 ### Relatório de Execução
 
-(Esta seção deve ser deixada em branco no template)
+Successfully researched `asyncpg`.
+- Accessed the official `asyncpg` documentation (magicstack.github.io/asyncpg/current/).
+- Extracted key information including:
+  - Establishing connections (`asyncpg.connect()`) and connection parameters.
+  - Executing queries (`conn.execute()`, `conn.fetch()`, etc.) including DDL.
+  - Prepared statements.
+  - Transaction management.
+  - Connection pool usage (`asyncpg.create_pool()`).
+  - Error handling.
+  - Best practices for FastAPI integration.
+- Created the summary file `docs/reference/asyncpg_summary.txt` with this information, code examples, and a link to the source.
