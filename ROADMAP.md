@@ -40,7 +40,7 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 * [x] Pesquisar e decidir sobre técnicas de pré-processamento de imagem para manuscritos. (Concluído: Pesquisa indicou pipeline com Scikit-image: Deskew -> Grayscale -> Median -> CLAHE -> Sauvola)
 * [x] Implementar pipeline de filtros (Deskew, Grayscale, Median, CLAHE, Sauvola) em `image_processor.py`.
 * [x] Integrar a chamada à função `preprocess_image` no loop de página em `src/main.py`.
-* [ ] (Pendente) Pesquisar e implementar análise de layout com `Docling` ou similar. (Docling-specific research complete - see TASK-023 results; alternatives to be investigated in TASK-016)
+* [ ] (Pendente) Pesquisar e implementar análise de layout com `Docling` ou similar. (Docling research complete via TASK-023 - Docling identified as a strong candidate for implementation in TASK-016. See `docs/reference/docling_summary.txt`.)
 * [x] **Escrever Testes Automatizados:** Criar testes unitários para a pipeline de `image_processor.py`, validando a aplicação de cada filtro.
 * [x] Realizar commit das funcionalidades de pré-processamento.
 
