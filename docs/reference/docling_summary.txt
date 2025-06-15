@@ -1,0 +1,32 @@
+# Docling Layout Analysis - Research Summary
+
+## Introduction
+
+This document summarizes the research findings for a tool or library named "Docling" intended for document layout analysis, as per TASK-023. The goal was to identify its capabilities, setup, and usage for the 'transcritor-pdf' project.
+
+## Findings for "Docling"
+
+Initial research, including searches on GitHub (for "Docling layout analysis") and attempts at broader web searches, did not yield any specific, publicly available tool, library, or documentation for a layout analysis system explicitly named "Docling."
+
+Possible reasons for this include:
+- "Docling" might be a proprietary or internal tool not available for public use.
+- It could be a research project that is not widely published or is known by a different name.
+- It might be a feature within a larger, less specifically named document processing suite.
+- The name might have been a placeholder or a potential candidate that was not pursued.
+
+## Conclusion for "Docling"
+
+As of the time of this research, a direct, usable layout analysis tool named "Docling" has not been identified.
+
+## Recommendations for TASK-016
+
+Given that "Docling" was not found, TASK-016 ("F2: Pesquisar e implementar análise de layout com Docling *ou similar*") should proceed with the following approach:
+1.  **Broaden the search:** Investigate well-known open-source Python libraries and cloud-based APIs for document layout analysis. Examples to explore could include:
+    *   **LayoutParser:** A Python library for document image analysis, including layout detection using various models.
+    *   **Detectron2:** A platform for object detection and segmentation, which can be trained for layout analysis.
+    *   **OCR-specific tools with layout features:** Libraries like `pytesseract` (with appropriate Page Segmentation Modes) or cloud services (Google Cloud Vision API, Azure AI Document Intelligence) often provide layout information (bounding boxes for paragraphs, lines, words).
+    *   **PDF parsing libraries:** Some advanced PDF libraries might offer structure or block-level information.
+2.  **Evaluate alternatives:** Based on ease of integration, performance, accuracy, and cost (if applicable), select a suitable alternative.
+3.  **Document the chosen alternative:** Create a new summary file in `docs/reference/` for the selected tool, similar to what was intended for `docling_summary.txt`.
+
+This approach will help fulfill the objectives of incorporating layout analysis into the 'transcritor-pdf' project as outlined in the roadmap.
