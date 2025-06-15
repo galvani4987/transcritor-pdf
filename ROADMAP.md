@@ -1,15 +1,8 @@
-Peço sinceras desculpas pela nova falha na formatação. Você está absolutamente correto, os títulos das fases ainda continham a formatação em negrito. Agradeço pela sua paciência.
-
-Revisei o documento cuidadosamente para remover toda a formatação de negrito e itálico dos títulos das fases e de qualquer outra parte do texto que não deveria ter ênfase.
-
-Segue a versão final e corrigida do `ROADMAP.md`:
-
-```markdown
 # Roadmap - Transcritor PDF
 
 Este documento detalha as fases e tarefas planejadas para o desenvolvimento do projeto `transcritor-pdf`. Usaremos checkboxes (`[ ]` pendente, `[x]` concluído) para acompanhar o progresso. Nota: Requisitos atualizados em 24/04/2025 para incluir processamento página-a-página, objetivo final de RAG, e interação com Vector DB.
 
-Fase 0: Configuração Inicial e Planejamento
+### Fase 0: Configuração Inicial e Planejamento
 
 * [x] Definição do Escopo e Objetivos do Projeto (Atualizado: Saída para RAG + Vetorização)
 * [x] Definição das Tecnologias Principais (Python, Langchain, Docling, OpenRouter)
@@ -24,7 +17,7 @@ Fase 0: Configuração Inicial e Planejamento
 * [x] Criação deste arquivo `ROADMAP.md`
 * [x] Realizar o commit das atualizações no `ROADMAP.md` e arquivos de configuração.
 
-Fase 1: Tratamento da Entrada (Módulo `src/input_handler`)
+### Fase 1: Tratamento da Entrada (Módulo `src/input_handler`)
 
 * [x] Adicionar dependência para manipulação de PDF (ex: `pypdfium2`) ao `requirements.txt` e instalar.
 * [x] Implementar análise básica de argumentos de linha de comando (CLI) em `src/main.py` usando `argparse` para receber o caminho do arquivo PDF de entrada.
@@ -37,89 +30,94 @@ Fase 1: Tratamento da Entrada (Módulo `src/input_handler`)
     * Receber o caminho do PDF.
     * Chamar o `pdf_splitter` para obter os caminhos das páginas.
     * Iterar sobre cada caminho de página, chamando as fases seguintes (placeholders) para cada uma.
+* [x] **Escrever Testes Automatizados:** Implementar testes unitários para as funções de `pdf_splitter.py` e `loader.py`, garantindo a correta divisão do PDF e o carregamento das páginas.
 * [x] Realizar commit das funcionalidades de tratamento de entrada e divisão de PDF.
 
-Fase 2: Pré-processamento por Página (Módulo `src/preprocessor`)
+### Fase 2: Pré-processamento por Página (Módulo `src/preprocessor`)
 
-* [x] Adicionar dependências de pré-processamento ao `requirements.txt` (ex: `pillow`) e instalar.
+* [x] Adicionar dependências de pré-processamento ao `requirements.txt` (ex: `pillow`, `scikit-image`) e instalar.
 * [x] Criar `src/preprocessor/image_processor.py`.
 * [x] Pesquisar e decidir sobre técnicas de pré-processamento de imagem para manuscritos. (Concluído: Pesquisa indicou pipeline com Scikit-image: Deskew -> Grayscale -> Median -> CLAHE -> Sauvola)
-* [x] Adicionar dependência `scikit-image` ao `requirements.txt` e instalar.
-* [x] Implementar Deskewing (Correção de Inclinação) em `image_processor.py`.
-* [x] Implementar Conversão para Escala de Cinza em `image_processor.py`.
-* [x] Implementar Filtro de Mediana (Redução de Ruído) em `image_processor.py` usando Scikit-image.
-* [x] Implementar CLAHE (Melhora de Contraste) em `image_processor.py` usando Scikit-image.
-* [x] Implementar Binarização Sauvola em `image_processor.py` usando Scikit-image.
-* [x] Implementar [Opcional] Recorte de Bordas em `image_processor.py`.
+* [x] Implementar pipeline de filtros (Deskew, Grayscale, Median, CLAHE, Sauvola) em `image_processor.py`.
 * [x] Integrar a chamada à função `preprocess_image` no loop de página em `src/main.py`.
+* [ ] (Pendente) Pesquisar e implementar análise de layout com `Docling` ou similar.
+* [x] **Escrever Testes Automatizados:** Criar testes unitários para a pipeline de `image_processor.py`, validando a aplicação de cada filtro.
 * [x] Realizar commit das funcionalidades de pré-processamento.
-* [ ] (Pendente) Pesquisar como usar `Docling` (ou similar) para análise de layout em cada imagem de página (detectar blocos de texto, áreas de assinatura).
-* [ ] (Pendente) Criar `src/preprocessor/layout_analyzer.py` (ou integrar).
-* [ ] (Pendente) Implementar a integração com `Docling` para obter informações de layout por página.
 
-Fase 3: Extração de Informações por Página (Módulo `src/extractor`)
+### Fase 3: Extração de Informações por Página (Módulo `src/extractor`)
 
-* [x] Criar `src/extractor/llm_client.py`.
-* [x] Implementar a lógica para carregar a API Key do OpenRouter do `.env`.
-* [x] Implementar a configuração e inicialização do cliente Langchain (OpenRouter).
-* [x] Criar `src/extractor/text_extractor.py`.
-* [x] Desenvolver prompt/cadeia Langchain para extrair texto (OCR) da imagem da página pré-processada.
-* [x] Criar `src/extractor/info_parser.py`.
-* [x] Desenvolver prompt/cadeia Langchain para analisar o texto extraído da página e identificar/extrair informações chave (JSON Output).
-* [x] Refinar prompts para precisão e custo por página (tanto para text_extractor quanto info_parser). (Refinamento inicial concluído).
-* [x] Implementar tratamento de erros para chamadas à API LLM (mais robusto, com retentativas).
-* [x] Integrar as etapas de extração (text_extractor) no loop de página em `src/main.py`.
-* [x] Integrar a chamada ao `info_parser` no loop de página em `src/main.py`.
+* [x] Criar `src/extractor/llm_client.py` para configurar e inicializar o cliente Langchain.
+* [x] Criar `src/extractor/text_extractor.py` para extrair texto bruto da imagem via LLM.
+* [x] Criar `src/extractor/info_parser.py` para extrair informações estruturadas do texto via LLM.
+* [x] Refinar prompts para precisão e custo.
+* [x] Integrar as chamadas de extração no loop de página em `src/main.py`.
+* [x] **Escrever Testes Automatizados:** Implementar testes unitários para os módulos de extração, utilizando `mocks` para simular as respostas da API do LLM e validar o parsing dos resultados.
 * [x] Realizar commit das funcionalidades de extração por página.
 
-Fase 4: Tratamento da Saída para RAG (Módulo `src/output_handler`)
+### Fase 4: Tratamento da Saída para RAG (Módulo `src/output_handler`)
 
 * [x] Criar `src/output_handler/formatter.py`.
-* [x] Definir formato de saída estruturado (ex: lista de JSONs, um por página/chunk) otimizado para RAG. (Função inicial criada, definição pode ser refinada).
-* [x] Implementar função em `formatter.py` para gerar essa saída estruturada a partir dos dados extraídos de cada página. (Função inicial criada, chunking básico implementado).
-* [x] Implementar a exibição (talvez resumida) do resultado no console.
-* [x] Implementar a opção de salvar a saída estruturada completa em um arquivo (ex: `.jsonl`).
-* [x] Integrar o tratamento de saída no final do processamento do PDF em `src/main.py`.
+* [x] Definir e implementar a função para formatar os dados extraídos em chunks otimizados para RAG.
+* [x] Integrar a formatação da saída no fluxo principal em `src/main.py`.
+* [x] **Escrever Testes Automatizados:** Criar testes para o `formatter.py`, garantindo que os chunks e metadados sejam gerados na estrutura correta.
 * [x] Realizar commit das funcionalidades de tratamento de saída para RAG.
 
-Fase 5: Vetorização e Armazenamento (Módulo `src/vectorizer`)
+### Fase 5: Vetorização e Armazenamento (Módulo `src/vectorizer`)
 
-* [x] Escolher biblioteca e modelo de embedding: OpenAI `text-embedding-3-small` via API. Adicionar dependência `langchain-openai` ao `requirements.txt` e instalar.
-* [x] Escolher Vector DB: PostgreSQL com extensão vetorial (pré-existente no `modular-dashboard`). Adicionar dependência `asyncpg` (+ `psycopg2-binary` se necessário para compatibilidade) ao `requirements.txt` e instalar.
-* [x] Criar módulo `src/vectorizer/` com `__init__.py`.
-* [x] Criar `src/vectorizer/embedding_generator.py`.
-* [x] Implementar lógica para gerar embeddings (usando OpenAI) para os chunks de texto da saída formatada (Fase 4).
-* [x] Criar `src/vectorizer/vector_store_handler.py`.
-* [x] Implementar lógica para inicializar/conectar ao PostgreSQL.
-* [x] Implementar lógica para adicionar/atualizar os vetores e metadados na tabela PostgreSQL apropriada.
-* [x] Integrar a etapa de vetorização no fluxo principal (`main.py`), após a Fase 4.
+* [x] Adicionar dependências (`langchain-openai`, `asyncpg`) ao `requirements.txt`.
+* [x] Criar `src/vectorizer/embedding_generator.py` para gerar embeddings.
+* [x] Criar `src/vectorizer/vector_store_handler.py` para interagir com o PostgreSQL.
+* [x] Integrar a etapa de vetorização no fluxo principal (`main.py`).
+* [x] **Escrever Testes Automatizados:** Implementar testes para `embedding_generator.py` (com mock da API) e para `vector_store_handler.py` (testando a construção de queries SQL).
 * [x] Realizar commit da funcionalidade de vetorização.
 
-Fase 6: Integração Final, Testes e Refinamento
+### Fase 6: Integração Final, Testes e Refinamento
 
-* [x] Revisar a integração de todos os módulos no pipeline principal (loop por página + vetorização).
-* [x] Adicionar logging adequado.
+* [x] Revisar a integração de todos os módulos no pipeline principal.
+* [x] Adicionar logging adequado em todas as etapas.
 * [x] Criar a estrutura da pasta `tests/`.
-* [x] Escrever testes unitários e de integração (incluindo vetorização). (Testes unitários com mocks para módulos principais concluídos).
-* [x] Refatorar código (clareza, eficiência, manutenibilidade). (Refatorado vector_store_handler para asyncpg, main loop para helper).
-* [x] Adicionar/Melhorar docstrings. (Módulos principais concluídos).
+* [x] **Execução da Suíte de Testes:** Executar e garantir a passagem de todos os testes unitários criados nas fases anteriores.
+* [x] **Escrever Testes de Integração:** Criar testes de integração para o pipeline completo (de ponta-a-ponta), usando um PDF de exemplo e mocks para serviços externos (LLM, DB).
+* [x] Refatorar código (clareza, eficiência, manutenibilidade).
+* [x] Adicionar/Melhorar docstrings.
 * [x] Atualizar `README.md` com instruções de uso completas.
 * [x] Realizar commit da versão final do CLI.
 
-Fase 7: Futuro - Integração com `modular-dashboard`
+### Fase 7: Integração com `modular-dashboard` como Microsserviço API
 
-* [ ] Analisar requisitos para integração.
-* [ ] Definir API/interface programática.
-* [ ] Refatorar código para ser reutilizável como biblioteca.
-* [ ] Implementar a interface de integração.
+* [ ] **Atualizar Dependências da API:**
+    * [ ] Adicionar `fastapi` e `uvicorn[standard]` ao arquivo `requirements.txt`.
+* [ ] **Refatorar Ponto de Entrada (`src/main.py`):**
+    * [ ] Remover a lógica de `argparse` e instanciar a aplicação FastAPI.
+* [ ] **Modularizar Lógica de Negócio:**
+    * [ ] Refatorar o pipeline em uma função autônoma `process_pdf_pipeline(file_content: bytes)`.
+* [ ] **Implementar Endpoints da API:**
+    * [ ] Criar endpoint `GET /health/` para verificação de saúde.
+    * [ ] Criar endpoint `POST /process-pdf/` que aceita `UploadFile`.
+* [ ] **Implementar Tratamento de Erros da API:**
+    * [ ] Definir e implementar respostas de erro padronizadas em JSON com códigos de status HTTP apropriados.
+* [ ] **Implementar Gerenciamento de Schema do Banco de Dados:**
+    * [ ] Usar o evento `@app.on_event("startup")` para executar `CREATE EXTENSION` e `CREATE TABLE`.
+* [ ] **Escrever Testes da API:**
+    * [ ] Implementar testes de integração para os endpoints (`/health`, `/process-pdf/`) usando o `TestClient` do FastAPI.
+* [ ] **Validar Conexão e Documentação:**
+    * [ ] Revisar `vector_store_handler.py` para conexão via variáveis de ambiente.
+    * [ ] Atualizar o `README.md` do projeto com a documentação da nova API.
 
-Fase 8: Containerização com Docker
+### Fase 8: Containerização e Orquestração
 
-* [ ] Criar um arquivo `.dockerignore` para otimizar o contexto de build da imagem.
-* [ ] Criar um `Dockerfile` para a aplicação Python, definindo a imagem base, dependências e ponto de entrada.
-* [ ] Criar um arquivo `docker-compose.yml` para orquestrar os serviços da aplicação e do banco de dados.
-* [ ] Configurar o serviço `db` no `docker-compose.yml` para usar uma imagem PostgreSQL com a extensão `pgvector`.
-* [ ] Configurar o serviço `app` no `docker-compose.yml`, garantindo a passagem de variáveis de ambiente (`.env`) e a montagem de volumes para os PDFs de entrada.
-* [ ] Atualizar o `README.md` com uma nova seção detalhando como construir e executar o projeto usando Docker e Docker Compose.
-* [ ] Realizar commit das funcionalidades de containerização.
-```
+* [x] Criar um arquivo `.dockerignore` para otimizar o contexto de build.
+* [x] Criar um `Dockerfile` para a aplicação Python.
+* [ ] Configurar a orquestração via o `docker-compose.yml` do projeto `modular-dashboard-adv`.
+* [ ] **Escrever Teste de Smoke:** Criar um teste simples para validar que o serviço containerizado sobe corretamente e responde ao endpoint de saúde.
+* [ ] Validar que o serviço `transcritor-pdf` funciona corretamente quando iniciado pelo `docker-compose` principal.
+* [ ] Atualizar a seção de "Uso" do `README.md` para refletir a execução via Docker.
+
+### Fase 9: Otimização e Escalabilidade (Futuro)
+
+* [ ] **Implementar Fila de Tarefas para Processamento Assíncrono:**
+    * [ ] Pesquisar e integrar uma biblioteca de fila de tarefas (ex: Celery com Redis).
+    * [ ] Refatorar o endpoint `POST /process-pdf/` para adicionar a tarefa à fila e retornar um `task_id`.
+    * [ ] Criar um novo endpoint `GET /process-pdf/status/{task_id}` para consultar o status.
+* [ ] **Escrever Testes para a Fila Assíncrona:**
+    * [ ] Implementar testes para garantir que as tarefas são enfileiradas corretamente e que o status pode ser consultado.
