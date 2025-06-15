@@ -99,8 +99,8 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
     * [x] Definir e implementar respostas de erro padronizadas em JSON com códigos de status HTTP apropriados.
 * ✅ Doc Research: pgvector (Vector Storage with PostgreSQL) (TASK-024)
 * ✅ Doc Research: asyncpg (Async PostgreSQL Driver) (TASK-030)
-* [ ] **Implementar Gerenciamento de Schema do Banco de Dados:**
-    * [ ] Usar o evento `@app.on_event("startup")` para executar `CREATE EXTENSION` e `CREATE TABLE`.
+* [x] **Implementar Gerenciamento de Schema do Banco de Dados:** (TASK-013)
+    * [x] Usar o evento `@app.on_event("startup")` para executar `CREATE EXTENSION` e `CREATE TABLE`.
 * [ ] **Escrever Testes da API:**
     * [ ] Implementar testes de integração para os endpoints (`/health`, `/process-pdf/`) usando o `TestClient` do FastAPI.
 * [ ] **Validar Conexão e Documentação:**

@@ -61,6 +61,74 @@ async def generic_exception_handler(request: Request, exc: Exception):
         # For debugging, you might include: "error_type": type(exc).__name__, "message": str(exc)
     )
 
+# --- Database Setup & Teardown Events ---
+# Import db utilities
+from .db_config import connect_to_db, close_db_connection, db_pool, EMBEDDING_DIMENSIONS
+import asyncpg # Required for conn.execute within startup event
+
+@app.on_event("startup")
+async def startup_db_event():
+    """
+    Connects to the database and creates the necessary table(s) if they don't exist.
+    """
+    logger.info("FastAPI startup event: Attempting to connect to database and setup schema...")
+    await connect_to_db() # Establishes the db_pool
+    if db_pool: # Ensure pool was created successfully
+        async with db_pool.acquire() as conn:
+            # It's good practice to use transactions for DDL sequences,
+            # though for simple IF NOT EXISTS it might be less critical.
+            async with conn.transaction():
+                try:
+                    # Create vector extension
+                    await conn.execute("CREATE EXTENSION IF NOT EXISTS vector;")
+                    logger.info("Ensured 'vector' extension exists.")
+
+                    # Define and create documents table
+                    # Using SERIAL for ID for simplicity, UUID could be an alternative
+                    # EMBEDDING_DIMENSIONS will be used from db_config
+                    create_table_query = f"""
+                    CREATE TABLE IF NOT EXISTS documents (
+                        id SERIAL PRIMARY KEY,
+                        filename TEXT,
+                        page_number INTEGER,
+                        text_content TEXT,
+                        metadata JSONB,
+                        embedding VECTOR({EMBEDDING_DIMENSIONS}),
+                        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                        UNIQUE(filename, page_number) -- Assuming a document page is unique
+                    );
+                    """
+                    # Added more fields: filename, page_number, created_at, and a UNIQUE constraint
+                    await conn.execute(create_table_query)
+                    logger.info(f"Ensured 'documents' table exists with embedding dimension {EMBEDDING_DIMENSIONS}.")
+
+                    # Example: Create an index (optional, can also be managed via migrations)
+                    # This is a basic index, refer to pgvector docs for IVFFlat or HNSW for larger datasets
+                    create_index_query = f"""
+                    CREATE INDEX IF NOT EXISTS idx_documents_embedding ON documents USING ivfflat (embedding vector_l2_ops) WITH (lists = 100);
+                    """
+                    # Using vector_l2_ops as an example, choose based on your distance metric
+                    # await conn.execute(create_index_query)
+                    # logger.info("Ensured basic index on embedding column exists (example using IVFFlat).")
+                    # Commenting out index creation for now, as it might be slow for startup
+                    # and depends on the specific vector ops preferred (l2, cosine, ip).
+
+                except asyncpg.exceptions.PostgresError as pe:
+                    logger.error(f"PostgreSQL error during startup schema setup: {pe}")
+                except Exception as e:
+                    logger.error(f"An unexpected error occurred during startup schema setup: {e}", exc_info=True)
+    else:
+        logger.error("Database pool not available after connect_to_db() call, skipping schema setup. Application might not function correctly.")
+        # Depending on requirements, might raise an error here to stop app startup if DB is critical.
+
+@app.on_event("shutdown")
+async def shutdown_db_event():
+    """
+    Closes the database connection pool.
+    """
+    logger.info("FastAPI shutdown event: Closing database connection pool...")
+    await close_db_connection()
+
 # --- Logging Configuration ---
 # Basic logging setup, can be expanded later (e.g., from config file)
 logging.basicConfig(
