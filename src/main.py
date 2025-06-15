@@ -3,8 +3,11 @@
 Main entry point for the Transcritor PDF API.
 """
 import logging
-from fastapi import FastAPI, File, UploadFile
-from typing import List, Dict, Any, Optional # Added Optional for consistency
+from fastapi import FastAPI, File, UploadFile, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY, HTTP_500_INTERNAL_SERVER_ERROR
+from typing import List, Dict, Any, Optional
 
 # --- FastAPI App Initialization ---
 app = FastAPI(
@@ -12,6 +15,51 @@ app = FastAPI(
     description="API para processar arquivos PDF, extrair texto e informações estruturadas, e preparar dados para RAG.",
     version="0.1.0"
 )
+
+# --- Exception Handlers ---
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """
+    Handles validation errors (e.g., invalid request body).
+    Returns a 422 Unprocessable Entity response with error details.
+    """
+    logger.error(f"Validation error: {exc.errors()} for request: {request.url.path}", exc_info=False) # exc_info=False as exc.errors() is detailed enough
+    # It's good practice to log exc.body() if the body content might be relevant and not too large/sensitive
+    # logger.debug(f"Request body: {exc.body()}")
+    return JSONResponse(
+        status_code=HTTP_422_UNPROCESSABLE_ENTITY,
+        # Providing a more structured error, including the type of error and where it occurred.
+        content={"detail": "Validation Error", "errors": exc.errors()},
+        # Alternative simpler content: content={"detail": exc.errors(), "body": exc.body}
+    )
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    """
+    Handles FastAPI's HTTPException.
+    Ensures these are also logged and returned in a consistent JSON format.
+    FastAPI does this by default, but explicit handling allows for custom logging or format if needed.
+    """
+    logger.error(f"HTTPException: {exc.status_code} {exc.detail} for request: {request.url.path}", exc_info=False)
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail}, # This is FastAPI's default structure for HTTPException
+    )
+
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception):
+    """
+    Handles any other unhandled exceptions.
+    Returns a 500 Internal Server Error response.
+    """
+    logger.error(f"Unhandled exception: {str(exc)} for request: {request.url.path}", exc_info=True)
+    return JSONResponse(
+        status_code=HTTP_500_INTERNAL_SERVER_ERROR,
+        content={"detail": "An unexpected internal server error occurred. Please contact support."},
+        # It's generally not a good idea to expose raw exception details to the client in production.
+        # For debugging, you might include: "error_type": type(exc).__name__, "message": str(exc)
+    )
 
 # --- Logging Configuration ---
 # Basic logging setup, can be expanded later (e.g., from config file)
@@ -48,22 +96,52 @@ async def process_pdf_endpoint(file: UploadFile = File(...)):
     It reads the file, then calls the main processing pipeline.
     """
     logger.info(f"Received file: {file.filename} (type: {file.content_type})")
+
+    # Basic file validation
+    if not file.filename:
+        logger.warning("File upload attempt with no filename.")
+        raise HTTPException(status_code=400, detail="No filename provided.")
+
+    if file.content_type != "application/pdf":
+        logger.warning(f"Invalid file type: {file.content_type} for file {file.filename}. Only PDF is allowed.")
+        raise HTTPException(status_code=415, detail="Invalid file type. Only PDF files are allowed.")
+
     try:
         file_bytes = await file.read()
-        logger.info(f"File read into memory, size: {len(file_bytes)} bytes.")
+        logger.info(f"File '{file.filename}' read into memory, size: {len(file_bytes)} bytes.")
+
+        if not file_bytes:
+            logger.warning(f"Uploaded file '{file.filename}' is empty.")
+            raise HTTPException(status_code=400, detail="Uploaded file is empty.")
 
         # Call the main processing pipeline
         result = await process_pdf_pipeline(file_content=file_bytes, filename=file.filename)
 
-        logger.info(f"Processing finished for {file.filename}. Result status: {result.get('status')}")
+        logger.info(f"Processing finished for '{file.filename}'. Result status: {result.get('status')}")
+
+        # Handle potential errors reported by the pipeline itself
+        if result.get("status") == "failed" or result.get("status") == "error":
+            error_message = result.get("message", "PDF processing failed.")
+            logger.error(f"Pipeline processing error for '{file.filename}': {error_message}")
+            # Determine appropriate status code based on pipeline's error type if possible
+            # For now, using 500 if pipeline signals failure, or 400 if it's a known processing issue.
+            # This part might need refinement as process_pdf_pipeline matures.
+            status_code = 400 if result.get("status") == "failed" else 500 # Example logic
+            raise HTTPException(status_code=status_code, detail=error_message)
+
         return result
+
+    except HTTPException as http_exc:
+        # Re-raise HTTPException so it's caught by its specific handler or FastAPI default
+        logger.debug(f"Re-raising HTTPException for '{file.filename}': {http_exc.detail}")
+        raise http_exc
     except Exception as e:
-        logger.error(f"Error processing file {file.filename}: {e}", exc_info=True)
-        # Consider returning a more specific FastAPI HTTPExeption here
-        return {"status": "error", "filename": file.filename, "message": f"An unexpected error occurred: {str(e)}"}
+        # This catches unexpected errors during file read or within the pipeline if not handled by HTTPExceptions
+        logger.error(f"Unexpected error processing file '{file.filename}': {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"An internal server error occurred while processing the PDF: {file.filename}.")
     finally:
         await file.close()
-        logger.info(f"File {file.filename} closed.")
+        logger.info(f"File '{file.filename}' closed.")
 
 # --- Placeholder for future imports and pipeline logic ---
 # These would eventually be real imports if logic is moved to other files/modules

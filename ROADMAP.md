@@ -95,8 +95,8 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 * [x] **Implementar Endpoints da API:** (TASK-011)
     * [x] Criar endpoint `GET /health/` para verificação de saúde.
     * [x] Criar endpoint `POST /process-pdf/` que aceita `UploadFile`.
-* [ ] **Implementar Tratamento de Erros da API:**
-    * [ ] Definir e implementar respostas de erro padronizadas em JSON com códigos de status HTTP apropriados.
+* [x] **Implementar Tratamento de Erros da API:** (TASK-012)
+    * [x] Definir e implementar respostas de erro padronizadas em JSON com códigos de status HTTP apropriados.
 * [ ] **Implementar Gerenciamento de Schema do Banco de Dados:**
     * [ ] Usar o evento `@app.on_event("startup")` para executar `CREATE EXTENSION` e `CREATE TABLE`.
 * [ ] **Escrever Testes da API:**
