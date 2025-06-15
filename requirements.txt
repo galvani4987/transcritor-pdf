@@ -16,7 +16,7 @@ openai              # Biblioteca cliente da OpenAI (usada por langchain-openai)
 pypdfium2           # Manipulação de PDF (dividir páginas)
 Pillow              # Manipulação de Imagem (base, usada por pypdfium2/skimage)
 scikit-image        # Processamento avançado de imagem (CLAHE, Sauvola, Median, etc.)
-# docling-core      # (?) Para análise de layout (adicionar se/quando necessário)
+docling             # For advanced PDF layout analysis and document understanding
 
 # === Vector Store / Database ===
 asyncpg             # Driver Async PostgreSQL (para pgvector)
