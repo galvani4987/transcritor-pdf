@@ -133,6 +133,8 @@ This existing service definition is well-suited for a development environment. H
      CMD ["/opt/venv/bin/python", "-m", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "${APP_PORT}"]
      ```
 
+**Note:** The sample `Dockerfile` above includes `ENV PYTHONPATH=/app`. While this is a valid approach, the primary `Dockerfile` at the root of the `transcritor-pdf` repository (as of this writing) does not set `PYTHONPATH`, deferring this configuration to the Docker Compose environment (e.g., in `modular-dashboard-adv/docker-compose.yml`) to allow for flexibility. The key is to ensure `/app` is in Python's import path when the container runs.
+
 **5. Port and Command:**
    - The service is configured to run on port `8002` and uses `uvicorn src.main:app ... --reload`. This aligns with a FastAPI application structure where `main.py` is inside a `src` directory.
    - The `volumes: - ../transcritor-pdf:/app` mount supports the `--reload` functionality.

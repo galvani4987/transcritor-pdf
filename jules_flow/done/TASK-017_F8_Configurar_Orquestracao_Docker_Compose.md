@@ -2,7 +2,7 @@
 id: TASK-017
 title: "F8: Configurar orquestração Docker Compose"
 epic: "Fase 8: Containerização e Orquestração"
-status: backlog
+status: done
 priority: medium
 dependencies: ["TASK-032"]
 assignee: Jules

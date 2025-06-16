@@ -2,7 +2,7 @@
 id: TASK-018
 title: "F8: Escrever Teste de Smoke"
 epic: "Fase 8: Containerização e Orquestração"
-status: backlog
+status: done
 priority: medium
 dependencies: ["TASK-017", "TASK-032"]
 assignee: Jules
