@@ -1,0 +1,228 @@
+# Docker & Docker Compose - Research Summary for transcritor-pdf
+
+This document summarizes research findings and best practices for using Docker and Docker Compose to containerize the `transcritor-pdf` Python/FastAPI application.
+
+## Key Documentation URLs
+
+*   **Docker Documentation:** [https://docs.docker.com/](https://docs.docker.com/)
+*   **Docker Build (Dockerfiles):** [https://docs.docker.com/build/](https://docs.docker.com/build/)
+*   **Dockerfile Best Practices:** [https://docs.docker.com/build/building/best-practices/](https://docs.docker.com/build/building/best-practices/)
+*   **Multi-Stage Builds:** [https://docs.docker.com/build/building/multi-stage/](https://docs.docker.com/build/building/multi-stage/)
+*   **Python Specific Guide (Containerize):** [https://docs.docker.com/guides/python/containerize/](https://docs.docker.com/guides/python/containerize/)
+*   **Docker Compose Documentation:** [https://docs.docker.com/compose/](https://docs.docker.com/compose/)
+*   **Compose File Reference:** [https://docs.docker.com/reference/compose-file/](https://docs.docker.com/reference/compose-file/)
+*   **Compose Quickstart:** [https://docs.docker.com/compose/gettingstarted/](https://docs.docker.com/compose/gettingstarted/)
+
+## Dockerfile Best Practices for Python/FastAPI
+
+Based on official documentation, the following practices are recommended for the `transcritor-pdf` `Dockerfile`:
+
+1.  **Base Image:**
+    *   Use an official Python slim image (e.g., `python:3.11-slim-bullseye` or `python:3.11-slim-bookworm`) to keep the image size small. Pin to a specific version tag (and optionally SHA digest) for reproducible builds.
+    *   Example: `ARG PYTHON_VERSION=3.11` (then use `${PYTHON_VERSION}-slim`)
+
+2.  **Multi-Stage Builds:**
+    *   Use a `builder` stage (e.g., `FROM python:${PYTHON_VERSION} AS builder`) to install dependencies, including any build-time tools.
+    *   Use a final, separate stage (e.g., `FROM python:${PYTHON_VERSION}-slim AS runtime`) for the runtime environment.
+    *   Copy only necessary artifacts (like installed packages from the virtual environment and application code) from the `builder` stage to the `runtime` stage. This drastically reduces final image size.
+
+3.  **Non-Root User:**
+    *   Create a dedicated non-root user and group (e.g., `appuser`).
+    *   Switch to this user using the `USER appuser` instruction before the `CMD`. This enhances security.
+    *   Example: `RUN adduser --disabled-password --gecos "" --home "/nonexistent" --shell "/sbin/nologin" --no-create-home --uid 10001 appuser`
+
+4.  **Dependency Management:**
+    *   Copy `requirements.txt` first, then install dependencies. This leverages Docker's build cache effectively. If `requirements.txt` doesn't change, this layer is cached.
+    *   Use `pip install --no-cache-dir -r requirements.txt` to avoid caching pip downloads within the layer, potentially making layers smaller if not using advanced pip caching mounts.
+    *   For more advanced caching with BuildKit: `RUN --mount=type=cache,target=/root/.cache/pip --mount=type=bind,source=requirements.txt,target=requirements.txt python -m pip install -r requirements.txt`
+
+5.  **Environment Variables:**
+    *   `ENV PYTHONDONTWRITEBYTECODE=1`: Prevents Python from writing `.pyc` files.
+    *   `ENV PYTHONUNBUFFERED=1`: Ensures application logs are sent straight to stdout/stderr, making them visible immediately.
+
+6.  **Application Code:**
+    *   Set `WORKDIR /app` (or similar).
+    *   Copy application code (`COPY . /app` or `COPY ./src /app/src`) after installing dependencies.
+
+7.  **Port Exposure:**
+    *   `EXPOSE 8000` (or the port Uvicorn will run on) to document the application's listening port.
+
+8.  **Runtime Command (`CMD`):**
+    *   Use the exec form: `CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]`.
+    *   `src.main:app` refers to the FastAPI application instance in `src/main.py`.
+    *   `--host 0.0.0.0` is essential for the application to be reachable from outside the container.
+
+9.  **.dockerignore:**
+    *   Use a `.dockerignore` file to exclude unnecessary files from the build context (e.g., `.git`, `.venv`, `__pycache__`, test files, local `.env` files not intended for the image).
+
+### Example Multi-Stage Dockerfile Structure (Conceptual)
+
+```dockerfile
+# syntax=docker/dockerfile:1
+
+ARG PYTHON_VERSION=3.11
+ARG APP_PORT=8000
+
+# ---- Builder Stage ----
+FROM python:${PYTHON_VERSION}-slim AS builder
+LABEL stage=builder
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /opt/venv
+RUN python -m venv .
+
+# Activate venv and install dependencies
+# Using cache mount for pip
+COPY requirements.txt .
+RUN . /opt/venv/bin/activate && \
+    pip install --no-cache-dir -U pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# ---- Runtime Stage ----
+FROM python:${PYTHON_VERSION}-slim AS runtime
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV APP_PORT=${APP_PORT}
+
+WORKDIR /app
+
+# Create a non-privileged user
+ARG UID=10001
+RUN adduser \
+    --disabled-password \
+    --gecos "" \
+    --home "/nonexistent" \
+    --shell "/sbin/nologin" \
+    --no-create-home \
+    --uid "${UID}" \
+    appuser
+
+# Copy virtual environment from builder stage
+COPY --from=builder /opt/venv /opt/venv
+
+# Copy application source code
+# Assuming your app code is in ./src
+COPY ./src /app/src
+# If main.py is in root, adjust accordingly or copy whole context if needed
+# COPY . /app
+
+# Ensure /app and /opt/venv are owned by appuser if necessary,
+# though usually not needed if USER is switched before CMD.
+# RUN chown -R appuser:appuser /app /opt/venv
+
+USER appuser
+
+EXPOSE ${APP_PORT}
+
+# Activate venv in CMD
+CMD ["/opt/venv/bin/python", "-m", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "${APP_PORT}"]
+```
+
+## Docker Compose (`compose.yaml`) Best Practices
+
+1.  **File Name:** Prefer `compose.yaml` (newer convention) or `docker-compose.yml`.
+2.  **Services:** Define each component of your application as a service (e.g., `api`, `db`).
+3.  **`build` vs. `image`:**
+    *   Use `build: .` (or `build: context: ./path/to/dockerfile_dir`) for services built from a local Dockerfile.
+    *   Use `image: image_name:tag` for pre-built images (e.g., `postgres:16-alpine`).
+4.  **`ports`:** Map host ports to container ports (`"HOST_PORT:CONTAINER_PORT"`).
+5.  **`environment` / `env_file`:**
+    *   Use `environment:` for a few variables or `env_file: .env` to load from an `.env` file (recommended for secrets and configurations).
+    *   `.env` file should be in `.gitignore`.
+6.  **`volumes`:**
+    *   **Named volumes:** For persistent data (e.g., database storage: `my_db_data:/var/lib/postgresql/data`).
+    *   **Bind mounts:** For development, to mount source code into the container for live reloading (e.g., `./src:/app/src`). Avoid for production images where code should be part of the image.
+7.  **`networks`:** Define custom bridge networks for communication between services. Services on the same Compose-defined network can reach each other by service name.
+8.  **`depends_on`:** Control service startup order. Use with `condition: service_healthy` if the depended-on service has a `healthcheck`.
+9.  **`healthcheck`:** Define health checks for services (especially databases) so other services can wait for them to be ready.
+10. **`restart` policy:** (e.g., `unless-stopped`, `always`) for production-like behavior.
+
+### Example `compose.yaml` for `transcritor-pdf` (Standalone)
+
+```yaml
+# compose.yaml
+
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: transcritor_pdf_app:latest
+    container_name: transcritor_pdf_api
+    restart: unless-stopped
+    ports:
+      - "${API_PORT_HOST:-8000}:${APP_PORT:-8000}" # APP_PORT is used inside Dockerfile
+    env_file:
+      - .env # For DB_USER, DB_PASSWORD, DB_NAME, OPENAI_API_KEY etc.
+    environment:
+      - DB_HOST=db # Service name of the PostgreSQL container
+      - DB_PORT=5432
+      # Other non-secret env vars can go here
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - transcritor_net
+    # For development, to see code changes live (if uvicorn --reload is used in CMD):
+    # volumes:
+    #   - ./src:/app/src
+
+  db:
+    image: postgres:16-alpine
+    container_name: transcritor_pdf_db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - transcritor_db_data:/var/lib/postgresql/data
+    ports:
+      - "${DB_PORT_HOST:-5433}:5432" # Expose DB port to host if needed for direct access
+    networks:
+      - transcritor_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  transcritor_db_data:
+
+networks:
+  transcritor_net:
+    driver: bridge
+```
+**Note on `.env` file for the example above:**
+```env
+# .env file (This file should be in .gitignore)
+PYTHON_VERSION=3.11
+APP_PORT=8000
+API_PORT_HOST=8000
+
+DB_USER=transcritor_user
+DB_PASSWORD=a_secure_password_here
+DB_NAME=transcritor_db
+DB_PORT_HOST=5433 # Host port for DB if direct access needed
+
+OPENAI_API_KEY=your_openai_api_key_here
+# Add other environment variables as needed
+```
+
+## Integration with `modular-dashboard-adv`
+
+When integrating `transcritor-pdf` into `modular-dashboard-adv`'s `docker-compose.yml`:
+1.  The `transcritor-pdf` API service definition would be added to `modular-dashboard-adv`'s `compose.yaml`.
+2.  The `build.context` for `transcritor-pdf` would need to point to the relative path of the `transcritor-pdf` project directory.
+3.  If `modular-dashboard-adv` already provides a PostgreSQL database, the `db` service definition from `transcritor-pdf`'s standalone compose might not be needed. Instead, `transcritor-pdf`'s API service would be configured to use the existing database service (update `DB_HOST` and other DB env vars).
+4.  Services would need to be on a shared Docker network to communicate if not just relying on exposed ports.
+5.  Environment variable management needs to be consistent (e.g., using a shared `.env` or specific configurations within the `modular-dashboard-adv` compose file).
+
+This summary provides a foundation for creating the `Dockerfile` and `docker-compose.yml` configurations for the `transcritor-pdf` project.

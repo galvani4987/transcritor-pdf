@@ -109,6 +109,7 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 
 ### Fase 8: Containerização e Orquestração
 
+* ✅ Doc Research: Docker & Docker Compose (TASK-032) - see `docs/reference/docker_compose_summary.txt`
 * [x] Criar um arquivo `.dockerignore` para otimizar o contexto de build.
 * [x] Criar um `Dockerfile` para a aplicação Python.
 * [ ] Configurar a orquestração via o `docker-compose.yml` do projeto `modular-dashboard-adv`.
