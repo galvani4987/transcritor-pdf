@@ -112,7 +112,7 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 * ✅ Doc Research: Docker & Docker Compose (TASK-032) - see `docs/reference/docker_compose_summary.txt`
 * [x] Criar um arquivo `.dockerignore` para otimizar o contexto de build.
 * [x] Criar um `Dockerfile` para a aplicação Python.
-* [ ] Configurar a orquestração via o `docker-compose.yml` do projeto `modular-dashboard-adv`.
+* [x] Configurar a orquestração via o `docker-compose.yml` do projeto `modular-dashboard-adv`. (Integration notes prepared in TASK-017 for manual application based on existing definition in `modular-dashboard-adv`)
 * [ ] **Escrever Teste de Smoke:** Criar um teste simples para validar que o serviço containerizado sobe corretamente e responde ao endpoint de saúde.
 * [ ] Validar que o serviço `transcritor-pdf` funciona corretamente quando iniciado pelo `docker-compose` principal.
 * [ ] Atualizar a seção de "Uso" do `README.md` para refletir a execução via Docker.
