@@ -114,7 +114,7 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 * [x] Criar um `Dockerfile` para a aplicação Python.
 * [x] Configurar a orquestração via o `docker-compose.yml` do projeto `modular-dashboard-adv`. (Integration notes prepared in TASK-017 for manual application based on existing definition in `modular-dashboard-adv`)
 * [x] **Escrever Teste de Smoke:** Criar um teste simples para validar que o serviço containerizado sobe corretamente e responde ao endpoint de saúde. (Script `tests/smoke_test.py` created in TASK-018)
-* [ ] Validar que o serviço `transcritor-pdf` funciona corretamente quando iniciado pelo `docker-compose` principal.
+* [x] Validar que o serviço `transcritor-pdf` funciona corretamente quando iniciado pelo `docker-compose` principal.
 * [ ] Atualizar a seção de "Uso" do `README.md` para refletir a execução via Docker.
 
 ### Fase 9: Otimização e Escalabilidade (Futuro)
