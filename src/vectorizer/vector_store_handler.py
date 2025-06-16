@@ -64,13 +64,14 @@ async def add_chunks_to_vector_store(rag_chunks: List[Dict[str, Any]]):
         conn = await asyncpg.connect(**db_config)
         logger.info("Database connection successful (asyncpg).")
 
-        table_name = os.getenv("DB_VECTOR_TABLE", "your_vector_table")
-        chunk_id_col, text_col, metadata_col, vector_col = "chunk_id", "text_content", "metadata", "embedding_vector" # Adjust if needed
+        table_name = "documents" # Changed from os.getenv("DB_VECTOR_TABLE", "your_vector_table")
+        # chunk_id_col, text_col, metadata_col are implicitly correct. vector_col changed.
+        # For simplicity, direct usage in query string is preferred over maintaining these variables if fixed.
 
         insert_query = f"""
-            INSERT INTO {table_name} ({chunk_id_col}, {text_col}, {metadata_col}, {vector_col})
-            VALUES ($1, $2, $3, $4) ON CONFLICT ({chunk_id_col}) DO UPDATE SET
-            {text_col}=EXCLUDED.{text_col}, {metadata_col}=EXCLUDED.{metadata_col}, {vector_col}=EXCLUDED.{vector_col};
+            INSERT INTO {table_name} (chunk_id, text_content, metadata, embedding)
+            VALUES ($1, $2, $3, $4) ON CONFLICT (chunk_id) DO UPDATE SET
+            text_content=EXCLUDED.text_content, metadata=EXCLUDED.metadata, embedding=EXCLUDED.embedding;
         """
         logger.info(f"Preparing to insert/update data into table '{table_name}'...")
 

@@ -15,7 +15,7 @@ DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NA
 
 # Placeholder for embedding dimensions - this might come from a model config later
 # For now, common dimensions are 384 (e.g., all-MiniLM-L6-v2), 768 (e.g., BERT base), 1536 (OpenAI Ada-002)
-EMBEDDING_DIMENSIONS = int(os.getenv("EMBEDDING_DIMENSIONS", "384"))
+EMBEDDING_DIMENSIONS = int(os.getenv("EMBEDDING_DIMENSIONS", "1536"))
 
 # Global variable for the connection pool
 # Explicitly type hint that it can be None initially
