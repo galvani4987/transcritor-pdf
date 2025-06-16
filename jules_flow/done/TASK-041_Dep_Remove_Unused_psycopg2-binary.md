@@ -2,7 +2,7 @@
 id: TASK-041
 title: "Dep: Remove Unused psycopg2-binary"
 epic: "System Consistency & Correction"
-status: backlog
+status: done
 priority: low
 dependencies: []
 assignee: Jules
@@ -23,4 +23,8 @@ assignee: Jules
 
 ### Relatório de Execução
 
-(Esta seção deve ser deixada em branco no template)
+Subtask completed successfully.
+- Performed a global search for `psycopg2` imports in all `*.py` files within `src/` and `tests/`.
+- Confirmed no functional imports of `psycopg2` were found.
+- Removed the line `psycopg2-binary     # Driver Sync PostgreSQL (pode ser necessário para compatibilidade ou ferramentas)` from `requirements.txt`.
+The unused `psycopg2-binary` dependency has been removed.
