@@ -1,5 +1,5 @@
 from src.celery_app import celery_app
-from src.main import process_pdf_pipeline # Attempting to import directly
+from src.processing import process_pdf_pipeline # Import from the new processing module
 
 # If direct import of process_pdf_pipeline causes issues due to FastAPI app context
 # or other main.py specific initializations, the core logic of
@@ -13,35 +13,36 @@ def process_pdf_task(file_content_bytes: bytes, filename: str) -> dict:
     Relies on process_pdf_pipeline from src.main for the core logic.
     '''
     try:
-        # Assuming process_pdf_pipeline can be called with bytes and filename
-        # and does not depend on FastAPI request objects directly.
-        # This might require refactoring process_pdf_pipeline if it's too coupled with FastAPI.
-        # For now, we assume it's callable like this.
+        # Now calling process_pdf_pipeline imported from src.processing
+        print(f"Celery task received processing for: {filename}. Calling process_pdf_pipeline.")
 
-        # Simulate process_pdf_pipeline for now if direct import/call is complex
-        # In a real scenario, this would call the actual pipeline
-        print(f"Celery task received processing for: {filename}")
+        # The actual call to the (simulated) pipeline
+        # Note: process_pdf_pipeline is an async function.
+        # Celery tasks can be async, but it depends on the Celery version and configuration.
+        # Assuming Celery is set up to handle async tasks (e.g., Celery 5+ with an asyncio worker or by running the async code within `asyncio.run()`).
+        # For simplicity, if process_pdf_pipeline was synchronous, it would be a direct call.
+        # If it MUST remain async and the Celery worker isn't async-native, one might do:
+        # import asyncio
+        # result_summary = asyncio.run(process_pdf_pipeline(file_content=file_content_bytes, filename=filename))
+        # However, the `process_pdf_pipeline` in `src.processing` is already `async`.
+        # For now, let's assume the Celery setup can handle invoking async functions.
+        # If not, this part might need adjustment (e.g. making pipeline sync or using asyncio.run).
+        # Given the current structure, Celery would need to be able to `await` this.
+        # A standard Celery task is synchronous. To call async code from a sync task,
+        # we need `asyncio.run()`.
 
-        # This is where the actual call to process_pdf_pipeline would go.
-        # For this subtask, we'll focus on setting up the structure.
-        # The actual logic of process_pdf_pipeline will be tested/integrated
-        # when this task is called by the endpoint.
-        # Example:
-        # result_summary = process_pdf_pipeline(file_content=file_content_bytes, input_filename=filename)
+        import asyncio # Ensure asyncio is imported
 
-        # Placeholder result:
-        chunks_added = 10 # Dummy value
-        result_summary = {
-            "message": f"PDF '{filename}' processed successfully by Celery task.",
-            "filename": filename,
-            "chunks_added": chunks_added,
-            "status": "SUCCESS"
-        }
-        print(f"Celery task finished processing for: {filename}")
+        # Call the async pipeline using asyncio.run()
+        result_summary = asyncio.run(process_pdf_pipeline(file_content=file_content_bytes, filename=filename))
+
+        print(f"Celery task finished processing for: {filename}. Result: {result_summary.get('status')}")
         return result_summary
     except Exception as e:
         # Log the exception
+        # It's good to use Celery's logger if available, or standard logging.
+        # For now, print is used as per existing style.
         print(f"Celery task failed for {filename}: {str(e)}")
-        # You might want to re-raise or return a specific error structure
-        # For now, let Celery handle it by re-raising, which marks task as FAILED
+        # Re-raise the exception so Celery can mark the task as FAILED
+        # and store the exception information.
         raise

@@ -90,4 +90,3 @@ async def close_db_connection():
 # if __name__ == "__main__":
 #     logging.basicConfig(level=logging.INFO) # Ensure logger is configured for standalone run
 #     asyncio.run(main_app_lifecycle())
-```
