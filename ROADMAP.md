@@ -119,9 +119,9 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 
 ### Fase 9: Otimização e Escalabilidade (Futuro)
 
-* [ ] **Implementar Fila de Tarefas para Processamento Assíncrono:**
-    * [ ] Pesquisar e integrar uma biblioteca de fila de tarefas (ex: Celery com Redis).
-    * [ ] Refatorar o endpoint `POST /process-pdf/` para adicionar a tarefa à fila e retornar um `task_id`.
-    * [ ] Criar um novo endpoint `GET /process-pdf/status/{task_id}` para consultar o status.
+* [x] **Implementar Fila de Tarefas para Processamento Assíncrono:**
+    * [x] Pesquisar e integrar uma biblioteca de fila de tarefas (ex: Celery com Redis).
+    * [x] Refatorar o endpoint `POST /process-pdf/` para adicionar a tarefa à fila e retornar um `task_id`.
+    * [x] Criar um novo endpoint `GET /process-pdf/status/{task_id}` para consultar o status.
 * [ ] **Escrever Testes para a Fila Assíncrona:**
     * [ ] Implementar testes para garantir que as tarefas são enfileiradas corretamente e que o status pode ser consultado.
