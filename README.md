@@ -1,6 +1,12 @@
 # Transcritor PDF
 
-Este projeto é uma ferramenta de linha de comando (CLI) em Python que visa processar arquivos PDF contendo documentos médicos manuscritos. Ele extrai o texto de cada página usando modelos de linguagem multimodais, analisa o texto para extrair informações chave (nome do cliente, data, etc.), formata a saída em chunks adequados para RAG (Retrieval-Augmented Generation) e, finalmente, gera embeddings vetoriais para esses chunks, armazenando-os em um banco de dados PostgreSQL com a extensão pgvector.
+Este projeto é uma API em Python que visa processar arquivos PDF contendo documentos médicos manuscritos. Ele extrai o texto de cada página usando modelos de linguagem multimodais, analisa o texto para extrair informações chave (nome do cliente, data, etc.), formata a saída em chunks adequados para RAG (Retrieval-Augmented Generation) e, finalmente, gera embeddings vetoriais para esses chunks, armazenando-os em um banco de dados PostgreSQL com a extensão pgvector.
+
+## Status Atual da Implementação
+
+**Importante:** Embora muitos componentes individuais para o processamento de PDFs (como divisão de arquivos, pré-processamento de imagens, extração de texto via LLM, etc.) contenham lógica funcional, o pipeline principal de orquestração em `src/processing.py` (`process_pdf_pipeline`) atualmente utiliza lógica de simulação (placeholders).
+
+Isso significa que o processamento de ponta-a-ponta descrito nas "Funcionalidades Principais" ainda não está totalmente integrado e operacional. A funcionalidade completa requer desenvolvimento adicional para integrar os módulos componentes ao pipeline principal. Os testes de API existentes validam a interface da API e o enfileiramento de tarefas, mas não o processamento real do conteúdo do PDF.
 
 **Funcionalidades Principais:**
 
@@ -29,7 +35,7 @@ Este projeto é uma ferramenta de linha de comando (CLI) em Python que visa proc
     * `vectorizer/`: Módulos para vetorização e armazenamento.
         * `embedding_generator.py`: Gera embeddings via API OpenAI.
         * `vector_store_handler.py`: Interage com o banco de dados PostgreSQL/pgvector.
-    * `main.py`: Ponto de entrada da aplicação CLI e orquestrador do pipeline.
+    * `main.py`: Ponto de entrada da aplicação FastAPI e orquestrador do pipeline.
 * `tests/`: Testes unitários e de integração (usando `pytest`).
 * `requirements.txt`: Lista de dependências Python do projeto.
 * `.env`: Arquivo para armazenar segredos (API keys, credenciais de DB) - **NÃO versionar no Git!**
@@ -79,28 +85,18 @@ Este projeto é uma ferramenta de linha de comando (CLI) em Python que visa proc
     ```
 
 3.  **Configure o Banco de Dados PostgreSQL:**
-    * Certifique-se de que o PostgreSQL (versão 16+ recomendada) esteja instalado e rodando.
-    * Habilite a extensão `pgvector`: `CREATE EXTENSION IF NOT EXISTS vector;`
-    * Crie a tabela para armazenar os chunks e vetores (ajuste nomes e dimensão do vetor conforme necessário):
-
-            CREATE TABLE your_vector_table ( -- Use o nome real da tabela!
-                chunk_id TEXT PRIMARY KEY,
-                text_content TEXT,
-                metadata JSONB,
-                embedding_vector VECTOR(1536) -- Dimensão para text-embedding-3-small
-            );
-            -- Opcional: Crie um índice para busca eficiente
-            -- CREATE INDEX ON your_vector_table USING hnsw (embedding_vector vector_l2_ops);
-            -- CREATE INDEX ON your_vector_table USING ivfflat (embedding_vector vector_l2_ops) WITH (lists = 100);
-
-**CLI Usage:**
-
-Execute o script a partir da raiz do projeto, passando o caminho para o arquivo PDF como argumento:
-
-    # Certifique-se que o ambiente virtual está ativado
-    python -m src.main /caminho/para/seu/documento.pdf
-
-O script processará o PDF, exibirá logs no console indicando o progresso de cada etapa (divisão, pré-processamento, extração, formatação, embedding, armazenamento) e tentará inserir os dados no banco de dados configurado.
+    *   Certifique-se de que o PostgreSQL (versão 16+ recomendada) esteja instalado e rodando.
+    *   Crie um banco de dados e um usuário com as permissões necessárias no PostgreSQL.
+    *   **Configuração do Schema:** A aplicação FastAPI gerenciará automaticamente a criação da extensão `vector` (se não existir) e da tabela `documents` necessária durante a inicialização. Você não precisa executar manualmente os comandos `CREATE EXTENSION` ou `CREATE TABLE` para a tabela `documents`.
+    *   A tabela `documents` criada pela aplicação terá a seguinte estrutura:
+        *   `chunk_id TEXT PRIMARY KEY`
+        *   `filename TEXT`
+        *   `page_number INTEGER`
+        *   `text_content TEXT`
+        *   `metadata JSONB`
+        *   `embedding VECTOR(1536)` (configurado para o modelo `text-embedding-3-small`)
+        *   `created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP`
+    *   **Variáveis de Ambiente:** Certifique-se de que as variáveis de ambiente `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, e `DB_PASSWORD` no seu arquivo `.env` estão corretamente configuradas para apontar para o seu banco de dados PostgreSQL.
 
 **API Usage**
 
@@ -121,14 +117,14 @@ A API estará acessível em `http://localhost:8000`.
 1.  **Health Check**
     *   **Propósito:** Verificar o status operacional da API.
     *   **Método:** `GET`
-    *   **Caminho:** `/health`
+    *   **Caminho:** `/health/`
     *   **Resposta (200 OK):**
         ```json
-        {"status": "healthy"}
+        {"status": "ok"}
         ```
     *   **Exemplo `curl`:**
         ```bash
-        curl http://localhost:8000/health
+        curl http://localhost:8000/health/
         ```
 
 2.  **Processar PDF**

@@ -98,23 +98,20 @@ async def startup_db_event():
                     logger.info("Ensured 'vector' extension exists.")
 
                     # Define and create documents table
-                    # Using SERIAL for ID for simplicity, UUID could be an alternative
                     # EMBEDDING_DIMENSIONS will be used from db_config
                     create_table_query = f"""
                     CREATE TABLE IF NOT EXISTS documents (
-                        id SERIAL PRIMARY KEY,
+                        chunk_id TEXT PRIMARY KEY,
                         filename TEXT,
                         page_number INTEGER,
                         text_content TEXT,
                         metadata JSONB,
                         embedding VECTOR({EMBEDDING_DIMENSIONS}),
-                        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                        UNIQUE(filename, page_number) -- Assuming a document page is unique
+                        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
                     );
                     """
-                    # Added more fields: filename, page_number, created_at, and a UNIQUE constraint
                     await conn.execute(create_table_query)
-                    logger.info(f"Ensured 'documents' table exists with embedding dimension {EMBEDDING_DIMENSIONS}.")
+                    logger.info(f"Ensured 'documents' table exists with schema (chunk_id PK, embedding dimension {EMBEDDING_DIMENSIONS}).")
 
                     # Example: Create an index (optional, can also be managed via migrations)
                     # This is a basic index, refer to pgvector docs for IVFFlat or HNSW for larger datasets
