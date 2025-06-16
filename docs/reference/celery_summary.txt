@@ -1,0 +1,313 @@
+# Celery - Distributed Task Queue - Research Summary
+
+## Overview
+
+Celery is an open-source, simple, flexible, and reliable distributed system to process vast amounts of messages, while providing operations with the tools required to maintain such a system. It’s a task queue with a focus on real-time processing, while also supporting task scheduling.
+
+**Core Components:**
+
+*   **Tasks:** These are the actual functions or methods that you want to run asynchronously or periodically. In Celery, you define tasks by decorating your Python functions with `@app.task`.
+*   **Workers (`celery worker`):** These are the processes that run on one or more servers. They continuously monitor task queues for new work to perform. When a new task arrives, a worker picks it up and executes the corresponding Python function.
+*   **Broker:** The message transport mechanism that mediates communication between clients (your application code that sends tasks) and workers. The client adds a message to the queue, and the broker delivers it to a worker.
+    *   Examples: RabbitMQ (feature-complete, robust), Redis (fast, common for simpler setups), Amazon SQS.
+*   **Result Backend (Optional):** A datastore used to store the state and results of tasks. If you need to know if a task completed successfully, what its return value was, or if it failed, you'll need a result backend.
+    *   Examples: Redis, RabbitMQ (RPC-style), SQLAlchemy (database), Django ORM.
+
+## Installation
+
+*   **Core Celery Package:**
+    ```bash
+    pip install celery
+    ```
+*   **With Broker/Backend Specific Dependencies:**
+    *   For Redis support (as both broker and result backend):
+        ```bash
+        pip install celery[redis]
+        ```
+        This will also install `redis-py` if not already present.
+    *   For RabbitMQ (using `librabbitmq` or `py-amqp`):
+        ```bash
+        pip install celery[librabbitmq]
+        # or
+        pip install celery[amqp]
+        ```
+
+## Basic Application Setup
+
+Typically, you define a Celery application instance. This can be in a dedicated module (e.g., `celery_app.py` or `proj/celery.py`) or sometimes within your project's main package (e.g., `tasks.py`).
+
+**Example (`celery_app.py` or `tasks.py`):**
+```python
+from celery import Celery
+import time # For example task
+
+# Create a Celery application instance
+# The first argument is the name of the current module, important for Celery to auto-discover tasks.
+# The 'broker' argument specifies the URL of the message broker.
+# The 'backend' argument specifies the URL of the result backend.
+
+# Example using Redis as broker and result backend
+# It's good practice to use different Redis DB numbers for broker and backend if on the same instance.
+app = Celery('my_project_name',
+             broker='redis://localhost:6379/0',
+             backend='redis://localhost:6379/1')
+
+# Optional: Load configuration from a separate configuration file (e.g., celeryconfig.py)
+# app.config_from_object('celeryconfig')
+# See Configuration section below for details on celeryconfig.py
+
+# Example task definition
+@app.task
+def add(x, y):
+    return x + y
+
+@app.task
+def long_running_task(duration):
+    time.sleep(duration)
+    return f"Task completed after {duration} seconds"
+
+# To ensure tasks are discovered, the module containing this Celery app
+# and task definitions needs to be importable by the Celery worker.
+```
+
+## Configuration (`celeryconfig.py` or `app.conf.update(...)`)
+
+Celery offers many configuration options. You can set them directly on the `app.conf` object or use `app.config_from_object('yourconfigmodule')`.
+
+**Example `celeryconfig.py`:**
+```python
+# Broker settings
+broker_url = 'redis://localhost:6379/0'
+
+# Result backend settings
+result_backend = 'redis://localhost:6379/1'
+result_expires = 3600  # Expire results after 1 hour (in seconds)
+
+# Task serialization settings
+task_serializer = 'json'  # Default is pickle, json is safer and more portable
+result_serializer = 'json'
+accept_content = ['json'] # Specify accepted content types
+
+# Timezone settings (recommended for scheduled tasks / ETA)
+timezone = 'UTC'
+enable_utc = True # Ensure Celery uses UTC internally
+
+# Broker transport options (specific to the broker, e.g., Redis)
+broker_transport_options = {
+    'visibility_timeout': 43200  # 12 hours (in seconds). Adjust based on longest task.
+                                 # For Redis, this prevents tasks from being re-delivered if a worker
+                                 # is processing it for longer than this timeout.
+}
+
+# Result backend transport options (if applicable, e.g., for Redis)
+# result_backend_transport_options = {'visibility_timeout': 3600}
+
+# Other common settings
+# task_acks_late = True # Acknowledge task after completion/failure. Requires idempotent tasks.
+# worker_prefetch_multiplier = 1 # For long tasks, especially with acks_late=True.
+# worker_max_tasks_per_child = 100 # Recycle worker processes after 100 tasks.
+# worker_max_memory_per_child = 500000 # Recycle worker if it exceeds 500MB RAM (KB).
+```
+**Note on Redis Key Eviction:** If using Redis as a broker or backend, ensure its `maxmemory-policy` is set to `noeviction` or a policy like `allkeys-lru` that is less likely to evict Celery's internal keys, especially queue data. Ideally, Celery's data should not be subject to eviction.
+
+## Defining Tasks
+Tasks are Python functions decorated with `@app.task`.
+
+```python
+from .celery_app import app # Assuming app is defined in celery_app.py
+import time
+
+@app.task
+def my_simple_task(arg1, arg2):
+    result = f"Processed {arg1} and {arg2}"
+    return result
+
+@app.task(bind=True, max_retries=3, default_retry_delay=60) # bind=True gives access to 'self' (the task instance)
+def my_retry_task(self, data_id):
+    try:
+        # Simulate fetching data and processing, which might fail
+        data = fetch_data_from_external_service(data_id)
+        if not data:
+            print(f"Data ID {data_id} not found, retrying in {self.default_retry_delay}s... (Attempt {self.request.retries + 1}/{self.max_retries})")
+            # self.retry() uses default_retry_delay
+            # self.retry(countdown=custom_delay) uses a custom delay for this attempt
+            raise self.retry(exc=ValueError(f"Data not found for {data_id}"), countdown=int(self.default_retry_delay * (2 ** self.request.retries))) # Exponential backoff
+        processed_data = process_data(data)
+        return processed_data
+    except ConnectionError as exc:
+        print(f"Connection error for {data_id}, retrying... (Attempt {self.request.retries + 1}/{self.max_retries})")
+        # Retries the task, exc is logged.
+        raise self.retry(exc=exc) # Uses default_retry_delay
+    except Exception as e:
+        # Handle other unexpected errors, perhaps log them without retrying or with specific conditions
+        print(f"Unhandled exception for task {self.request.id}: {e}")
+        # self.update_state(state='FAILURE', meta={'exc_type': type(e).__name__, 'exc_message': str(e)})
+        raise # Re-raise to mark task as FAILED
+
+# Dummy functions for example
+def fetch_data_from_external_service(data_id):
+    if data_id == "fail_once" and my_retry_task.request.retries == 0: return None
+    if data_id == "conn_error" and my_retry_task.request.retries == 0: raise ConnectionError("Simulated connection error")
+    return {"id": data_id, "content": "some data"}
+def process_data(data): return f"Successfully processed {data['id']}"
+```
+
+## Running Workers
+Workers are started from the command line using the `celery` command.
+*   Basic command (assuming `app` is discoverable in `your_project.celery_app` or `your_project.tasks`):
+    ```bash
+    celery -A your_project.celery_app worker --loglevel=INFO
+    ```
+    (Replace `your_project.celery_app` with the actual path to your Celery app instance).
+*   Specify a queue for the worker to consume from:
+    ```bash
+    celery -A your_project.celery_app worker -Q important_tasks,default_tasks --loglevel=INFO
+    ```
+*   Adjust concurrency (number of child worker processes):
+    ```bash
+    celery -A your_project.celery_app worker -c 4 --loglevel=INFO
+    ```
+    (Default is the number of CPU cores).
+*   Run Celery Beat for scheduled tasks (if you have any defined with `app.conf.beat_schedule`):
+    ```bash
+    celery -A your_project.celery_app beat --loglevel=INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler # Example for django-celery-beat
+    ```
+
+## Calling Tasks
+Tasks can be called in several ways:
+
+*   **`.delay(*args, **kwargs)`:** A convenient shortcut to `apply_async`.
+    ```python
+    from .tasks import add # Assuming tasks.py contains the 'add' task and Celery app
+
+    result_object = add.delay(4, 5)
+    print(f"Task ID: {result_object.id}")
+    ```
+*   **`.apply_async(args=None, kwargs=None, countdown=None, eta=None, queue=None, ...)`:** Provides more control over task execution.
+    ```python
+    from datetime import datetime, timedelta
+
+    # Execute in 10 seconds from now
+    add.apply_async((10, 20), countdown=10)
+
+    # Execute at a specific time (eta must be a datetime object)
+    tomorrow_at_noon = datetime.utcnow() + timedelta(days=1)
+    tomorrow_at_noon = datetime(tomorrow_at_noon.year, tomorrow_at_noon.month, tomorrow_at_noon.day, 12, 0, 0)
+    add.apply_async((5,5), eta=tomorrow_at_noon)
+
+    # Send to a specific queue
+    add.apply_async((100,100), queue='priority_tasks')
+    ```
+
+### AsyncResult Object
+Calling a task returns an `AsyncResult` object, which can be used to check the task's state, wait for it to finish, and get its return value (if a result backend is configured).
+
+```python
+result_obj = add.delay(2, 2)
+
+print(f"Task ID: {result_obj.id}")
+print(f"Is task ready? {result_obj.ready()}") # False initially
+
+# Wait for the result (blocking call)
+# result_value = result_obj.get(timeout=10) # Waits up to 10 seconds
+# print(f"Result: {result_value}") # Raises exception if task failed, unless propagate=False
+
+# Check status without blocking (if you have a result backend)
+# print(f"Task state: {result_obj.state}") # PENDING, STARTED, SUCCESS, FAILURE, RETRY, REVOKED
+# if result_obj.successful(): print(f"Result: {result_obj.result}")
+# if result_obj.failed(): print(f"Traceback: {result_obj.traceback}")
+
+# result_obj.forget() # If you don't need to store/retrieve the result, this can free up resources in some backends.
+```
+
+## Canvas: Designing Workflows
+Celery allows you to compose complex workflows using a canvas of primitives.
+*   **Signature (`.s()` or `.si()` for immutable):** A task call blueprint.
+    ```python
+    from .tasks import add, multiply # Assuming multiply is another task
+
+    add_sig = add.s(2, 3) # Creates a signature: add(2, 3)
+    # result = add_sig.delay()
+    ```
+*   **Chain:** Links tasks sequentially; the output of one task becomes the input of the next.
+    ```python
+    from celery import chain
+    # (2 + 2) * 8
+    res_chain = chain(add.s(2, 2) | multiply.s(8))().get()
+    print(res_chain) # Output: 32
+    ```
+*   **Group:** Executes a list of tasks in parallel. Returns a special `GroupResult` object.
+    ```python
+    from celery import group
+    # Run three add tasks in parallel
+    job = group(add.s(i, i) for i in range(3)) # (add(0,0), add(1,1), add(2,2))
+    result_group = job.apply_async()
+    # print(result_group.get()) # Returns a list of results: [0, 2, 4]
+    ```
+*   **Chord:** Executes a group of tasks in parallel, and once all are complete, their results are passed to a callback task.
+    ```python
+    from celery import chord
+    from .tasks import tsum # Assume tsum = @app.task def tsum(numbers): return sum(numbers)
+
+    # Sum the results of the parallel 'add' tasks
+    # callback = tsum.s()
+    # header = [add.s(i, i) for i in range(10)]
+    # result_chord = chord(header)(callback).get()
+    # print(result_chord) # Example: sum of (0, 2, 4, ..., 18)
+    ```
+*   **Chunks:** Split an iterable of work into smaller parts.
+*   **Map/Starmap:** Similar to Python's built-in `map`.
+
+## Monitoring
+
+*   **Flower:** A real-time web-based monitoring and administration tool for Celery.
+    *   Install: `pip install flower`
+    *   Run:
+        ```bash
+        celery -A your_project.celery_app flower --broker=redis://localhost:6379/0 --port=5555
+        # Or if broker is in Celery app config:
+        # flower -A your_project.celery_app --port=5555
+        ```
+*   **Celery Command-Line Interface (CLI):**
+    *   `celery -A your_project.celery_app status`: Shows active workers.
+    *   `celery -A your_project.celery_app inspect active`: Lists active tasks.
+    *   `celery -A your_project.celery_app inspect scheduled`: Lists scheduled (ETA) tasks.
+    *   `celery -A your_project.celery_app inspect reserved`: Lists tasks prefetched by workers.
+    *   `celery -A your_project.celery_app control enable_events`: Enable events for monitoring (needed for some Flower features and `celery events`).
+*   **Broker-Specific Tools:**
+    *   Redis: `redis-cli llen <queue_name>` (shows length of a queue list), `redis-cli monitor`.
+    *   RabbitMQ: Management Plugin Web UI.
+
+## Best Practices & Optimization
+
+*   **Idempotent Tasks:** Design tasks to be idempotent, meaning they can be run multiple times with the same input and produce the same result without adverse side effects. This is crucial if `task_acks_late=True` or if tasks might be retried due to worker failures or visibility timeout.
+*   **Visibility Timeout (Redis/SQS):** For brokers like Redis or SQS, ensure `broker_transport_options = {'visibility_timeout': ...}` is set appropriately (longer than your longest task) to prevent tasks from being redelivered and run multiple times.
+*   **Task Acknowledgement (`task_acks_late`):**
+    *   Default (`task_acks_late = False` or not set): Tasks are acknowledged just *before* they are executed. If a worker crashes while executing, the task is lost (unless `task_reject_on_worker_lost` is used with some brokers).
+    *   `task_acks_late = True`: Tasks are acknowledged *after* they are completed (or fail). If a worker crashes during execution, the task will be re-queued for another worker. This increases reliability but requires idempotent tasks.
+*   **Prefetch Multiplier (`worker_prefetch_multiplier`):**
+    *   Default is 4. Each worker process will prefetch this many tasks from the queue.
+    *   For many short tasks, a higher value can improve throughput.
+    *   For long-running tasks, set this to 1 (`worker_prefetch_multiplier = 1`), especially if `task_acks_late = True`. This ensures a worker only reserves one long task at a time.
+*   **Worker Concurrency (`-c` option):** Adjust based on CPU cores and task type (CPU-bound vs. I/O-bound).
+*   **Memory Management for Workers:**
+    *   `worker_max_tasks_per_child`: Restarts worker child processes after they've executed a certain number of tasks. Helps free up memory that might be leaked by tasks or libraries.
+    *   `worker_max_memory_per_child`: Restarts worker child processes if they exceed a certain memory limit (in KB).
+*   **Transient Queues:** For tasks where it's acceptable to lose messages if the broker restarts and messages are not persisted (e.g., periodic status updates).
+*   **Separate Queues & Routing:** Use different queues for different types of tasks (e.g., high priority, low priority, CPU-bound, I/O-bound) and configure workers to consume from specific queues. This allows for better resource management and task prioritization.
+*   **Error Handling & Retries:** Implement robust error handling within tasks and leverage Celery's retry mechanisms (`self.retry()`).
+*   **Task Logging:** Use Python's `logging` module within tasks. Celery integrates well with it.
+*   **Keep Tasks Small & Focused:** Break down large, complex operations into smaller, manageable tasks, possibly orchestrated using Canvas primitives like chains or chords.
+
+## Relevant URLs
+
+*   **Celery Official Documentation:** `https://docs.celeryq.dev/en/stable/`
+*   **First Steps with Celery:** `https://docs.celeryq.dev/en/stable/getting-started/first-steps-with-celery.html`
+*   **Using Redis with Celery (Broker & Backend):** `https://docs.celeryq.dev/en/stable/getting-started/backends-and-brokers/redis.html`
+*   **Canvas - Designing Workflows:** `https://docs.celeryq.dev/en/stable/userguide/canvas.html`
+*   **Routing Tasks:** `https://docs.celeryq.dev/en/stable/userguide/routing.html`
+*   **Monitoring Guide:** `https://docs.celeryq.dev/en/stable/userguide/monitoring.html`
+*   **Optimizing Guide:** `https://docs.celeryq.dev/en/stable/userguide/optimizing.html`
+*   **Configuration and Defaults:** `https://docs.celeryq.dev/en/stable/userguide/configuration.html`
+*   **Flower (Monitoring Tool) Documentation:** `https://flower.readthedocs.io/en/latest/`
+*   **Tasks (In-depth Guide):** `https://docs.celeryq.dev/en/stable/userguide/tasks.html`
