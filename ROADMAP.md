@@ -85,7 +85,7 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 
 ### Fase 7: Integração com `modular-dashboard` como Microsserviço API
 
-* ✅ Doc Research: Uvicorn (TASK-031)
+* [x] Doc Research: Uvicorn (TASK-031)
 * [x] **Atualizar Dependências da API:** (TASK-008)
     * [x] Adicionar `fastapi` e `uvicorn[standard]` ao arquivo `requirements.txt`.
 * [x] **Refatorar Ponto de Entrada (`src/main.py`):** (TASK-009)
@@ -97,19 +97,19 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
     * [x] Criar endpoint `POST /process-pdf/` que aceita `UploadFile`.
 * [x] **Implementar Tratamento de Erros da API:** (TASK-012)
     * [x] Definir e implementar respostas de erro padronizadas em JSON com códigos de status HTTP apropriados.
-* ✅ Doc Research: pgvector (Vector Storage with PostgreSQL) (TASK-024)
-* ✅ Doc Research: asyncpg (Async PostgreSQL Driver) (TASK-030)
+* [x] Doc Research: pgvector (Vector Storage with PostgreSQL) (TASK-024)
+* [x] Doc Research: asyncpg (Async PostgreSQL Driver) (TASK-030)
 * [x] **Implementar Gerenciamento de Schema do Banco de Dados:** (TASK-013)
     * [x] Usar o evento `@app.on_event("startup")` para executar `CREATE EXTENSION` e `CREATE TABLE`.
 * [x] **Escrever Testes da API:** (TASK-014)
     * [x] Implementar testes de integração para os endpoints (`/health`, `/process-pdf/`) usando o `TestClient` do FastAPI.
-* [x] **Validar Conexão e Documentação:** ✅
+* [x] **Validar Conexão e Documentação:** [x]
     * [x] Revisar `vector_store_handler.py` para conexão via variáveis de ambiente.
     * [x] Atualizar o `README.md` do projeto com a documentação da nova API.
 
 ### Fase 8: Containerização e Orquestração
 
-* ✅ Doc Research: Docker & Docker Compose (TASK-032) - see `docs/reference/docker_compose_summary.txt`
+* [x] Doc Research: Docker & Docker Compose (TASK-032) - see `docs/reference/docker_compose_summary.txt`
 * [x] Criar um arquivo `.dockerignore` para otimizar o contexto de build.
 * [x] Criar um `Dockerfile` para a aplicação Python.
 * [x] Configurar a orquestração via o `docker-compose.yml` do projeto `modular-dashboard-adv`. (Integration notes prepared in TASK-017 for manual application based on existing definition in `modular-dashboard-adv`)
