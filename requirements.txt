@@ -33,3 +33,7 @@ pytest-mock         # Fixture para mocking/patching em testes
 pytest-asyncio      # Plugin para suportar testes async com pytest
 httpx               # Cliente HTTP assíncrono, dependência do TestClient do FastAPI
 requests            # For simple HTTP requests (e.g., in smoke tests)
+
+# === Task Queuing / Celery ===
+celery[redis]~=5.3.6 # Distributed Task Queue with Redis support
+redis~=5.0.0         # Python client for Redis

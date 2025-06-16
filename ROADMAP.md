@@ -114,14 +114,14 @@ Este documento detalha as fases e tarefas planejadas para o desenvolvimento do p
 * [x] Criar um `Dockerfile` para a aplicação Python.
 * [x] Configurar a orquestração via o `docker-compose.yml` do projeto `modular-dashboard-adv`. (Integration notes prepared in TASK-017 for manual application based on existing definition in `modular-dashboard-adv`)
 * [x] **Escrever Teste de Smoke:** Criar um teste simples para validar que o serviço containerizado sobe corretamente e responde ao endpoint de saúde. (Script `tests/smoke_test.py` created in TASK-018)
-* [ ] Validar que o serviço `transcritor-pdf` funciona corretamente quando iniciado pelo `docker-compose` principal.
-* [ ] Atualizar a seção de "Uso" do `README.md` para refletir a execução via Docker.
+* [x] Validar que o serviço `transcritor-pdf` funciona corretamente quando iniciado pelo `docker-compose` principal.
+* [x] Atualizar a seção de "Uso" do `README.md` para refletir a execução via Docker.
 
 ### Fase 9: Otimização e Escalabilidade (Futuro)
 
-* [ ] **Implementar Fila de Tarefas para Processamento Assíncrono:**
-    * [ ] Pesquisar e integrar uma biblioteca de fila de tarefas (ex: Celery com Redis).
-    * [ ] Refatorar o endpoint `POST /process-pdf/` para adicionar a tarefa à fila e retornar um `task_id`.
-    * [ ] Criar um novo endpoint `GET /process-pdf/status/{task_id}` para consultar o status.
+* [x] **Implementar Fila de Tarefas para Processamento Assíncrono:**
+    * [x] Pesquisar e integrar uma biblioteca de fila de tarefas (ex: Celery com Redis).
+    * [x] Refatorar o endpoint `POST /process-pdf/` para adicionar a tarefa à fila e retornar um `task_id`.
+    * [x] Criar um novo endpoint `GET /process-pdf/status/{task_id}` para consultar o status.
 * [ ] **Escrever Testes para a Fila Assíncrona:**
     * [ ] Implementar testes para garantir que as tarefas são enfileiradas corretamente e que o status pode ser consultado.

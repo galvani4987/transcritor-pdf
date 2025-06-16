@@ -9,6 +9,10 @@ from fastapi.responses import JSONResponse
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY, HTTP_500_INTERNAL_SERVER_ERROR
 from typing import List, Dict, Any, Optional
 
+from src.tasks import process_pdf_task # Added for Celery task dispatch
+from src.celery_app import celery_app # Added for task status check
+from celery.result import AsyncResult # Added for task status check
+
 # --- FastAPI App Initialization ---
 app = FastAPI(
     title="Transcritor PDF API",
@@ -182,22 +186,11 @@ async def process_pdf_endpoint(file: UploadFile = File(...)):
             logger.warning(f"Uploaded file '{file.filename}' is empty.")
             raise HTTPException(status_code=400, detail="Uploaded file is empty.")
 
-        # Call the main processing pipeline
-        result = await process_pdf_pipeline(file_content=file_bytes, filename=file.filename)
+        # Dispatch the processing to a Celery task
+        task = process_pdf_task.delay(file_content_bytes=file_bytes, filename=file.filename)
+        logger.info(f"File '{file.filename}' queued for processing with Task ID: {task.id}")
 
-        logger.info(f"Processing finished for '{file.filename}'. Result status: {result.get('status')}")
-
-        # Handle potential errors reported by the pipeline itself
-        if result.get("status") == "failed" or result.get("status") == "error":
-            error_message = result.get("message", "PDF processing failed.")
-            logger.error(f"Pipeline processing error for '{file.filename}': {error_message}")
-            # Determine appropriate status code based on pipeline's error type if possible
-            # For now, using 500 if pipeline signals failure, or 400 if it's a known processing issue.
-            # This part might need refinement as process_pdf_pipeline matures.
-            status_code = 400 if result.get("status") == "failed" else 500 # Example logic
-            raise HTTPException(status_code=status_code, detail=error_message)
-
-        return result
+        return {"task_id": task.id, "message": "PDF processing has been queued. You can check the status using the /process-pdf/status/{task_id} endpoint (not yet implemented)."}
 
     except HTTPException as http_exc:
         # Re-raise HTTPException so it's caught by its specific handler or FastAPI default
@@ -210,6 +203,43 @@ async def process_pdf_endpoint(file: UploadFile = File(...)):
     finally:
         await file.close()
         logger.info(f"File '{file.filename}' closed.")
+
+# --- Task Status Endpoint ---
+@app.get("/process-pdf/status/{task_id}", summary="Get the status of a PDF processing task")
+async def get_task_status(task_id: str):
+    logger.info(f"Accessing status for task_id: {task_id}")
+    task_result = AsyncResult(task_id, app=celery_app)
+
+    response_data = {
+        "task_id": task_id,
+        "status": task_result.status,
+        "result": None,
+        "error_info": None
+    }
+
+    if task_result.successful():
+        response_data["result"] = task_result.result
+        logger.info(f"Task {task_id} succeeded with result: {task_result.result}")
+    elif task_result.failed():
+        response_data["error_info"] = {
+            "error": str(task_result.info), # task_result.info often holds the exception instance
+            "traceback": task_result.traceback
+        }
+        logger.error(f"Task {task_id} failed. Info: {task_result.info}")
+    elif task_result.status == 'PENDING':
+        logger.info(f"Task {task_id} is pending.")
+    elif task_result.status == 'STARTED':
+        logger.info(f"Task {task_id} has started.")
+    elif task_result.status == 'RETRY':
+        response_data["error_info"] = { # For RETRY, info might also contain the exception
+            "error": str(task_result.info),
+            "traceback": task_result.traceback
+        }
+        logger.info(f"Task {task_id} is being retried.")
+    else:
+        logger.warning(f"Task {task_id} in unhandled state: {task_result.status}")
+
+    return response_data
 
 # --- Placeholder for future imports and pipeline logic ---
 # These would eventually be real imports if logic is moved to other files/modules
