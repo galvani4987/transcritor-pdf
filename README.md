@@ -93,7 +93,7 @@ Este projeto é uma ferramenta de linha de comando (CLI) em Python que visa proc
             -- CREATE INDEX ON your_vector_table USING hnsw (embedding_vector vector_l2_ops);
             -- CREATE INDEX ON your_vector_table USING ivfflat (embedding_vector vector_l2_ops) WITH (lists = 100);
 
-**Uso:**
+**CLI Usage:**
 
 Execute o script a partir da raiz do projeto, passando o caminho para o arquivo PDF como argumento:
 
@@ -101,6 +101,68 @@ Execute o script a partir da raiz do projeto, passando o caminho para o arquivo 
     python -m src.main /caminho/para/seu/documento.pdf
 
 O script processará o PDF, exibirá logs no console indicando o progresso de cada etapa (divisão, pré-processamento, extração, formatação, embedding, armazenamento) e tentará inserir os dados no banco de dados configurado.
+
+**API Usage**
+
+Esta seção descreve como rodar e interagir com a API FastAPI fornecida pelo projeto.
+
+**Rodando a API Localmente:**
+
+Para rodar a API localmente com recarregamento automático durante o desenvolvimento, use Uvicorn:
+
+```bash
+uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+A API estará acessível em `http://localhost:8000`.
+
+**Endpoints:**
+
+1.  **Health Check**
+    *   **Propósito:** Verificar o status operacional da API.
+    *   **Método:** `GET`
+    *   **Caminho:** `/health`
+    *   **Resposta (200 OK):**
+        ```json
+        {"status": "healthy"}
+        ```
+    *   **Exemplo `curl`:**
+        ```bash
+        curl http://localhost:8000/health
+        ```
+
+2.  **Processar PDF**
+    *   **Propósito:** Fazer upload de um arquivo PDF, processá-lo para extrair texto e informações, gerar embeddings e armazená-los no banco de dados.
+    *   **Método:** `POST`
+    *   **Caminho:** `/process-pdf/`
+    *   **Corpo da Requisição:** `multipart/form-data` com uma chave `pdf_file` e o arquivo PDF como seu valor.
+    *   **Resposta de Sucesso (200 OK):**
+        ```json
+        {
+            "message": "PDF processed and data stored successfully.",
+            "file_id": "unique_id_of_the_file",
+            "chunks_added": "count"
+        }
+        ```
+    *   **Respostas de Erro:**
+        *   `400 Bad Request`:
+            ```json
+            {"detail": "No PDF file provided."}
+            ```
+            ```json
+            {"detail": "Invalid PDF file."}
+            ```
+        *   `500 Internal Server Error`:
+            ```json
+            {"detail": "Error processing PDF: <specific error>"}
+            ```
+            ```json
+            {"detail": "Database connection error: <specific error>"}
+            ```
+    *   **Exemplo `curl`:**
+        ```bash
+        curl -X POST -F "pdf_file=@/caminho/para/seu/documento.pdf" http://localhost:8000/process-pdf/
+        ```
 
 **Testes:**
 
