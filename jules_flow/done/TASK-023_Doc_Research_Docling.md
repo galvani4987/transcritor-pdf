@@ -2,7 +2,7 @@
 id: TASK-023
 title: "Doc Research: Docling (Layout Analysis)"
 epic: "Documentation"
-status: backlog
+status: done
 priority: medium
 dependencies: []
 assignee: Jules

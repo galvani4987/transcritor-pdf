@@ -2,7 +2,7 @@
 id: TASK-032
 title: "Doc Research: Docker & Docker Compose (Project Setup)"
 epic: "Documentation"
-status: backlog
+status: done
 priority: medium
 dependencies: []
 assignee: Jules
