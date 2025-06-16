@@ -32,3 +32,4 @@ pytest              # Framework de teste
 pytest-mock         # Fixture para mocking/patching em testes
 pytest-asyncio      # Plugin para suportar testes async com pytest
 httpx               # Cliente HTTP assíncrono, dependência do TestClient do FastAPI
+requests            # For simple HTTP requests (e.g., in smoke tests)
