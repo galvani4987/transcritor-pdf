@@ -164,7 +164,76 @@ A API estará acessível em `http://localhost:8000`.
         curl -X POST -F "pdf_file=@/caminho/para/seu/documento.pdf" http://localhost:8000/process-pdf/
         ```
 
-**Testes:**
+## 🐳 Running with Docker Compose (as part of `modular-dashboard-adv`)
+
+This service is designed to be run as part of the `modular-dashboard-adv` project using its Docker Compose setup. This allows for easier management of services, dependencies (like the PostgreSQL database), and networking.
+
+### Prerequisites
+
+*   **Docker and Docker Compose installed:** Ensure you have the latest versions of Docker Desktop (which includes Docker Compose) or Docker Engine and Docker Compose plugin installed on your system.
+*   **`modular-dashboard-adv` project cloned:** You need to have the `galvani4987/modular-dashboard-adv` repository cloned to your local machine.
+*   **`transcritor-pdf` project cloned:** This `transcritor-pdf` project repository must be cloned as a **sibling directory** to the `modular-dashboard-adv` project. The `docker-compose.yml` in `modular-dashboard-adv` expects this structure for its build context.
+
+    Directory Structure Example:
+    ```
+    your_workspace_directory/
+    ├── modular-dashboard-adv/   <-- Main project with Docker Compose
+    │   ├── backend/
+    │   │   └── .env             <-- Shared .env file
+    │   └── docker-compose.yml
+    └── transcritor-pdf/         <-- This project (sibling to modular-dashboard-adv)
+        ├── Dockerfile
+        ├── src/
+        └── requirements.txt
+    ```
+
+### Configuration
+
+All runtime configuration for the `transcritor-pdf` service (when run via `modular-dashboard-adv`'s Docker Compose) is managed through the `.env` file located at `modular-dashboard-adv/backend/.env`.
+
+The `transcritor-pdf` service expects the following essential environment variables to be present in this shared `.env` file:
+
+*   `OPENAI_API_KEY`: Your API key for OpenAI (used for embeddings).
+*   `DB_HOST=db`: This is crucial. It tells `transcritor-pdf` to connect to the PostgreSQL service named `db` as defined within the `docker-compose.yml` of `modular-dashboard-adv`.
+*   `DB_PORT=5432`: The internal port of the `db` service. (Ensure this matches the PostgreSQL port if customized in `docker-compose.yml`).
+*   `DB_NAME`: The name of the database to use (e.g., `appdb`).
+*   `DB_USER`: The username for connecting to the database (e.g., `appuser`).
+*   `DB_PASSWORD`: The password for the database user.
+
+**Important Note on `PYTHONPATH`**:
+For the `transcritor-pdf` service to correctly locate its Python modules (e.g., `src.main`) when running inside the container, the environment variable `PYTHONPATH=/app` must be set. This is typically handled by the `transcritor_pdf` service definition within the `modular-dashboard-adv/docker-compose.yml` file (e.g., under the `environment` key). The `transcritor-pdf/Dockerfile` itself (as of the current version) does **not** set this variable. If you encounter `ModuleNotFoundError` or similar import errors when the service starts, ensure `PYTHONPATH=/app` is correctly defined for the `transcritor_pdf` container in the `docker-compose.yml` file. Refer to `docs/deployment/compose_integration_notes.md` for more details.
+
+### Running the Service
+
+1.  **Navigate to the `modular-dashboard-adv` directory:**
+    ```bash
+    cd path/to/your_workspace_directory/modular-dashboard-adv
+    ```
+
+2.  **Run Docker Compose:**
+    To build (if necessary) and start only the `transcritor-pdf` service and its explicit dependencies (like the `db` service if not already running):
+    ```bash
+    docker compose up db transcritor_pdf
+    ```
+    To run in detached mode (in the background):
+    ```bash
+    docker compose up -d db transcritor_pdf
+    ```
+    If all services in `modular-dashboard-adv` are desired, or if you want Docker Compose to handle all dependencies automatically:
+    ```bash
+    docker compose up
+    ```
+    The `transcritor-pdf` service will build its Docker image based on `../transcritor-pdf/Dockerfile` (if not already built) and then start.
+
+### Accessing the API
+
+Once the `transcritor-pdf` service is running via Docker Compose:
+
+*   The API will be available at: `http://localhost:8002` (as per the port mapping `8002:8002` typically defined in `modular-dashboard-adv/docker-compose.yml` for this service).
+*   **Health Check:** `GET http://localhost:8002/health/`
+*   **Process PDF:** `POST http://localhost:8002/process-pdf/` (use with a tool like `curl` or Postman to upload a PDF file).
+
+## Testes
 
 Para rodar os testes unitários (requer `pytest` instalado):
 
